@@ -1,0 +1,52 @@
+.sidebar {
+  border-right: 1px solid #f6f6f9;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav > div:first-child {
+  margin-bottom: 2rem;
+}
+
+.nav > div {
+  display: flex;
+  padding: 1rem;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 15px 20px;
+  color: #3b3c51;
+  text-decoration: none;
+  font-size: 1.2rem;
+  border-radius: 12px;
+}
+
+.settingBtn {
+  border-bottom: 1px solid #f6f6f9;
+  border-top: 1px solid #f6f6f9;
+  height: 100px;
+}
+
+.navLink:hover {
+  color: #1b48da;
+  background-color: #f3f7fd;
+}
+
+.navLink img {
+  width: 24px;
+  height: 24px;
+}
+
+.active {
+  color: #1b48da;
+  background-color: #f3f7fd;
+  font-weight: bold;
+}

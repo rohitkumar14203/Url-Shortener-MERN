@@ -1,0 +1,117 @@
+.container {
+  padding: 1rem;
+  height: calc(100vh - 80px); /* Adjust based on your header height */
+  display: flex;
+  flex-direction: column;
+}
+
+.tableContainer {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex: 1;
+  overflow: auto;
+  margin-bottom: 1rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.table thead {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
+}
+
+.table th {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+}
+
+.table td {
+  padding: 1rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.headerCell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.headerCell img {
+  margin-left: 1.5rem;
+}
+
+.urlCell {
+  max-width: 300px; /* Set the max width for the remarks column */
+  word-wrap: break-word; /* Break long words if they exceed the container width */
+  overflow-wrap: break-word; /* Ensures the text wraps within the container */
+  white-space: pre-wrap; /* Preserve whitespace and line breaks from the text */
+}
+
+.urlWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.urlWrapper span {
+  max-width: 300px;
+  word-wrap: break-word; /* Break long words if they exceed the container width */
+  overflow-wrap: break-word; /* Ensures the text wraps within the container */
+  white-space: pre-wrap; /* Preserve whitespace and line breaks from the text */
+}
+
+.visitRow {
+  transition: background-color 0.2s;
+}
+
+.noData {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  font-style: italic;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.pageButton {
+  border: none;
+  background: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.pageButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
+.pageButton img {
+  width: 24px;
+  height: 24px;
+}
+
+.pageInfo {
+  color: #666;
+  font-size: 0.9rem;
+}
