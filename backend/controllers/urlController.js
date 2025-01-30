@@ -171,10 +171,15 @@ const getUrlStats = asyncHandler(async (req, res) => {
 // @route   GET /:shortUrl
 // @access  Public
 const redirectToUrl = asyncHandler(async (req, res) => {
-  // Skip favicon and bot requests
+  const userAgent = req.headers["user-agent"] || "Unknown";
+
+  // Enhanced check for favicon and bot requests
   if (
     req.originalUrl === "/favicon.ico" ||
-    req.originalUrl.includes("robots.txt")
+    req.originalUrl.includes("robots.txt") ||
+    /bot|crawler|spider|crawling|favicon/i.test(userAgent) ||
+    !userAgent ||
+    userAgent === "Unknown"
   ) {
     res.status(204).end();
     return;
@@ -210,39 +215,28 @@ const redirectToUrl = asyncHandler(async (req, res) => {
   // Remove IPv6 prefix if present
   clientIp = clientIp.replace(/^::ffff:/, "");
 
-  // Create a unique visit identifier
-  const visitId = `${shortUrl}-${clientIp}-${Math.floor(Date.now() / 30000)}`; // 30-second window
+  // Create a unique visit identifier with more granular time window (5 seconds)
+  const visitId = `${shortUrl}-${clientIp}-${Math.floor(Date.now() / 5000)}`;
 
-  // Only register click if it's not a bot/crawler request and not a duplicate within 30 seconds
-  const userAgent = req.headers["user-agent"] || "Unknown";
-  const isBot = /bot|crawler|spider|crawling|favicon/i.test(userAgent);
+  // Check for recent visits from this IP to this URL
   const recentVisit = await URL.findOne({
     shortUrl,
     "clickDetails.visitId": visitId,
   });
 
-  if (!isBot && !recentVisit) {
-    // Register click with IP, user agent, and visit ID
+  // Only register click if it's not a duplicate within 5 seconds
+  if (!recentVisit) {
     await url.registerClick(clientIp, userAgent, visitId);
   }
 
-  // For Postman testing: Send both redirect and JSON response
-  if (req.headers.accept && req.headers.accept.includes("application/json")) {
-    res.json({
-      success: true,
-      message: "Redirect URL found",
-      redirectUrl: url.originalUrl,
-    });
-  } else {
-    // For browser: Perform actual redirect with cache control
-    res.setHeader(
-      "Cache-Control",
-      "no-store, no-cache, must-revalidate, proxy-revalidate"
-    );
-    res.setHeader("Pragma", "no-cache");
-    res.setHeader("Expires", "0");
-    res.redirect(url.originalUrl);
-  }
+  // For browser: Perform actual redirect with strict cache control
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate"
+  );
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.redirect(url.originalUrl);
 });
 
 export {
