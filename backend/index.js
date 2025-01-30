@@ -59,17 +59,17 @@ app.get("/", (req, res) => {
   res.send("API is running");
 });
 
-// Handle favicon requests
+// API Routes
+app.use("/api/users", userRoutes);
+app.use("/api/url", urlRoutes);
+
+// Handle favicon requests - MOVED BEFORE shortUrl handler
 app.get("/favicon.ico", (req, res) => {
   res.status(204).end();
 });
 
 // Handle URL redirects at root level
 app.get("/:shortUrl", redirectToUrl);
-
-// API Routes
-app.use("/api/users", userRoutes);
-app.use("/api/url", urlRoutes);
 
 app.listen(port, () => {
   console.log(
