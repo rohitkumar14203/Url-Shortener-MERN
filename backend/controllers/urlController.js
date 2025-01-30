@@ -171,15 +171,10 @@ const getUrlStats = asyncHandler(async (req, res) => {
 // @route   GET /:shortUrl
 // @access  Public
 const redirectToUrl = asyncHandler(async (req, res) => {
-  const userAgent = req.headers["user-agent"] || "Unknown";
-
-  // Enhanced check for favicon and bot requests
+  // Early return for favicon and other non-user requests
   if (
     req.originalUrl === "/favicon.ico" ||
-    req.originalUrl.includes("robots.txt") ||
-    /bot|crawler|spider|crawling|favicon/i.test(userAgent) ||
-    !userAgent ||
-    userAgent === "Unknown"
+    req.originalUrl.includes("robots.txt")
   ) {
     res.status(204).end();
     return;
@@ -188,7 +183,6 @@ const redirectToUrl = asyncHandler(async (req, res) => {
   const shortUrl = `https://${process.env.HOSTNAME || "localhost:5000"}/${
     req.params.shortUrl
   }`;
-
   const url = await URL.findOne({ shortUrl });
 
   if (!url) {
@@ -201,41 +195,47 @@ const redirectToUrl = asyncHandler(async (req, res) => {
     throw new Error("URL has expired");
   }
 
-  // Get the actual client IP address
+  // Get client IP
   let clientIp =
     req.headers["x-forwarded-for"] ||
     req.headers["x-real-ip"] ||
     req.socket.remoteAddress;
 
-  // If x-forwarded-for contains multiple IPs, get the first one (original client)
   if (clientIp && clientIp.includes(",")) {
     clientIp = clientIp.split(",")[0].trim();
   }
-
-  // Remove IPv6 prefix if present
   clientIp = clientIp.replace(/^::ffff:/, "");
 
-  // Create a unique visit identifier with more granular time window (5 seconds)
-  const visitId = `${shortUrl}-${clientIp}-${Math.floor(Date.now() / 5000)}`;
+  const userAgent = req.headers["user-agent"] || "Unknown";
 
-  // Check for recent visits from this IP to this URL
-  const recentVisit = await URL.findOne({
-    shortUrl,
-    "clickDetails.visitId": visitId,
-  });
+  // Skip click tracking for bots and favicon requests
+  const isBot = /bot|crawler|spider|crawling|favicon/i.test(userAgent);
 
-  // Only register click if it's not a duplicate within 5 seconds
-  if (!recentVisit) {
-    await url.registerClick(clientIp, userAgent, visitId);
+  if (!isBot) {
+    // Use IP and timestamp (rounded to nearest minute) to prevent double counting
+    const visitId = `${shortUrl}-${clientIp}-${Math.floor(Date.now() / 60000)}`;
+
+    // Check if this is a unique visit within the last minute
+    const existingVisit = await URL.findOne({
+      shortUrl,
+      "clickDetails.visitId": visitId,
+    });
+
+    if (!existingVisit) {
+      // Register the click asynchronously to not delay the redirect
+      url.registerClick(clientIp, userAgent, visitId).catch(console.error);
+    }
   }
 
-  // For browser: Perform actual redirect with strict cache control
+  // Set cache control headers to prevent caching
   res.setHeader(
     "Cache-Control",
-    "no-store, no-cache, must-revalidate, proxy-revalidate"
+    "private, no-cache, no-store, must-revalidate"
   );
   res.setHeader("Pragma", "no-cache");
   res.setHeader("Expires", "0");
+
+  // Perform the redirect
   res.redirect(url.originalUrl);
 });
 

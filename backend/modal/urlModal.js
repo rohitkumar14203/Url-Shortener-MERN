@@ -106,43 +106,56 @@ urlSchema.methods.registerClick = async function (
   userAgent,
   visitId
 ) {
-  this.clicks += 1;
+  try {
+    // Use findOneAndUpdate to atomically update the document
+    const result = await this.constructor.findOneAndUpdate(
+      {
+        _id: this._id,
+        "clickDetails.visitId": { $ne: visitId }, // Only update if this visitId doesn't exist
+      },
+      {
+        $inc: { clicks: 1 },
+        $push: {
+          clickDetails: {
+            ipAddress: ipAddress.replace(/^.*:/, ""),
+            device: determineDevice(userAgent),
+            userAgent,
+            visitId,
+          },
+        },
+      },
+      { new: true }
+    );
 
-  // Determine device from user agent
-  let device = "Other";
-  const userAgentLower = userAgent.toLowerCase();
+    return result;
+  } catch (error) {
+    console.error("Error registering click:", error);
+    throw error;
+  }
+};
 
-  if (userAgentLower.includes("android")) {
-    device = "Android";
+// Helper function to determine device
+function determineDevice(userAgent) {
+  const ua = userAgent.toLowerCase();
+
+  if (ua.includes("android")) {
+    return "Android";
   } else if (
-    userAgentLower.includes("iphone") ||
-    userAgentLower.includes("ipad") ||
-    userAgentLower.includes("ios")
+    ua.includes("iphone") ||
+    ua.includes("ipad") ||
+    ua.includes("ios")
   ) {
-    device = "iOS";
-  } else if (
-    userAgentLower.includes("macintosh") ||
-    userAgentLower.includes("mac os")
-  ) {
-    device = "Mac";
-  } else if (userAgentLower.includes("windows")) {
-    device = "Windows";
-  } else if (userAgentLower.includes("linux")) {
-    device = "Linux";
+    return "iOS";
+  } else if (ua.includes("macintosh") || ua.includes("mac os")) {
+    return "Mac";
+  } else if (ua.includes("windows")) {
+    return "Windows";
+  } else if (ua.includes("linux")) {
+    return "Linux";
   }
 
-  // Clean up IP address
-  const cleanIp = ipAddress.replace(/^.*:/, "");
-
-  this.clickDetails.push({
-    ipAddress: cleanIp,
-    device,
-    userAgent,
-    visitId,
-  });
-
-  return this.save();
-};
+  return "Other";
+}
 
 // Method to check if URL is inactive
 urlSchema.methods.isInactive = function () {
