@@ -9,6 +9,7 @@ const Layout = () => {
   const isLinksPage = location.pathname === "/link";
   const [refreshCallback, setRefreshCallback] = useState(() => () => {});
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleRefresh = useCallback(() => {
@@ -20,13 +21,21 @@ const Layout = () => {
     navigate("/link", { state: { searchQuery: query } });
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
-    <div className={styles.layout}>
-      <Sidebar />
+    <div
+      className={`${styles.layout} ${isSidebarOpen ? styles.sidebarOpen : ""}`}
+    >
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className={styles.mainContent}>
         <Header
           onLinkCreated={isLinksPage ? handleRefresh : undefined}
           onSearch={handleSearch}
+          onToggleSidebar={toggleSidebar}
+          isSidebarOpen={isSidebarOpen}
         />
         <main className={styles.content}>
           <Outlet context={{ setRefreshCallback, searchQuery }} />

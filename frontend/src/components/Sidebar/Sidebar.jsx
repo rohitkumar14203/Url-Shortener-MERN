@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import logo from "../../assets/Sidebar-Icons/Icons/Logo2.png";
 import styles from "./Sidebar.module.css";
@@ -13,11 +13,18 @@ import hovLinkIcon from "../../assets/Sidebar-Icons/Hover-Icons/hovLinkIcons.svg
 import hovAnalyticsIcon from "../../assets/Sidebar-Icons/Hover-Icons/hovAnalyticsIcons.svg";
 import hovSettingIcon from "../../assets/Sidebar-Icons/Hover-Icons/hovSettingIcons.svg";
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }) => {
   const [hoveredItem, setHoveredItem] = useState(null);
+  const location = useLocation();
+
+  const handleLinkClick = () => {
+    if (window.innerWidth <= 768) {
+      onClose();
+    }
+  };
 
   return (
-    <div className={styles.sidebar}>
+    <div className={`${styles.sidebar} ${isOpen ? styles.open : ""}`}>
       <img src={logo} alt="logo" className={styles.logo} />
       <nav className={styles.nav}>
         <div>
@@ -28,6 +35,7 @@ const Sidebar = () => {
             }
             onMouseEnter={() => setHoveredItem("dashboard")}
             onMouseLeave={() => setHoveredItem(null)}
+            onClick={handleLinkClick}
           >
             <img
               src={
@@ -47,6 +55,7 @@ const Sidebar = () => {
             }
             onMouseEnter={() => setHoveredItem("link")}
             onMouseLeave={() => setHoveredItem(null)}
+            onClick={handleLinkClick}
           >
             <img
               src={
@@ -65,6 +74,7 @@ const Sidebar = () => {
             }
             onMouseEnter={() => setHoveredItem("analytic")}
             onMouseLeave={() => setHoveredItem(null)}
+            onClick={handleLinkClick}
           >
             <img
               src={
@@ -85,6 +95,7 @@ const Sidebar = () => {
             }
             onMouseEnter={() => setHoveredItem("setting")}
             onMouseLeave={() => setHoveredItem(null)}
+            onClick={handleLinkClick}
           >
             <img
               src={

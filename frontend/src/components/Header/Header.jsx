@@ -11,9 +11,15 @@ import { useState, useEffect } from "react";
 import Modal from "../Modal/Modal";
 import { API_BASE_URL } from "../../config/config";
 import { notify } from "../../utils/notify";
-import PropTypes from "prop-types";
 
-const Header = ({ onLinkCreated, onSearch }) => {
+import menuIcon from "../../assets/Hamburg.png";
+
+const Header = ({
+  onLinkCreated,
+  onSearch,
+  onToggleSidebar,
+  isSidebarOpen,
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
@@ -113,19 +119,33 @@ const Header = ({ onLinkCreated, onSearch }) => {
 
   const formattedDate = `${weekday}, ${month} ${day}, ${year}`;
 
+  const getInitials = (name) => {
+    if (!name) return "";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
   return (
     <>
       <header className={styles.header}>
+        <button
+          className={`${styles.menuButton} ${isSidebarOpen ? styles.open : ""}`}
+          onClick={onToggleSidebar}
+          aria-label="Toggle menu"
+        >
+          <img src={menuIcon} alt="" />
+        </button>
         <div className={styles.title}>
           <div className={styles.greeting}>
-            <span>
-              <img
-                src={greetingIcon}
-                alt="greeting icon"
-                className={styles.greetingIcon}
-              />
-              {greeting}, {user?.username}
-            </span>
+            <img src={greetingIcon} alt="" className={styles.greetingIcon} />
+            {greeting}, {user.username}!
           </div>
           <div className={styles.date}>{formattedDate}</div>
         </div>
@@ -148,16 +168,8 @@ const Header = ({ onLinkCreated, onSearch }) => {
             />
           </div>
           <div className={styles.userInitialsContainer}>
-            <div
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className={styles.userInitials}
-            >
-              {user?.username
-                ?.split(" ")
-                .map((name) => name[0])
-                .slice(0, 2)
-                .join("")
-                .toUpperCase()}
+            <div onClick={toggleDropdown} className={styles.userInitials}>
+              {getInitials(user?.username)}
             </div>
             {isDropdownOpen && (
               <div className={styles.dropdown}>
@@ -177,11 +189,6 @@ const Header = ({ onLinkCreated, onSearch }) => {
       />
     </>
   );
-};
-
-Header.propTypes = {
-  onLinkCreated: PropTypes.func,
-  onSearch: PropTypes.func,
 };
 
 export default Header;

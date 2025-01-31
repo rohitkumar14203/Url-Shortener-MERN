@@ -4,8 +4,26 @@
   align-items: center;
   padding: 1rem 2rem;
   background: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   width: 100%;
+}
+
+.menuButton {
+  display: none;
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  margin-right: 1rem;
+}
+
+.menuButton img {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.3s ease;
+}
+
+.menuButton.open img {
+  transform: rotate(90deg);
 }
 
 .title {
@@ -18,7 +36,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 600;
   color: #3b3c51;
 }
@@ -26,11 +44,14 @@
 .greetingIcon {
   width: 24px;
   height: 24px;
+  margin-bottom: 18px;
 }
 
 .date {
   color: #666;
   font-size: 0.875rem;
+  margin-left: 2rem;
+  line-height: 0;
 }
 
 .userMenu {
@@ -47,11 +68,6 @@
   color: white;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s;
-}
-
-.createBtn:hover {
-  background: #1539b3;
 }
 
 .searchBar {
@@ -101,7 +117,7 @@
   margin-top: 0.5rem;
   background: white;
   border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
   min-width: 120px;
   z-index: 1000;
 }
@@ -120,4 +136,70 @@
 
 .dropdownItem:hover {
   background: #f5f5f5;
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 0.75rem 1rem;
+  }
+
+  .menuButton {
+    display: block;
+  }
+  .searchBar {
+    padding: 0.4rem;
+    width: 120px;
+  }
+
+  .searchInput {
+    font-size: 0.6rem;
+  }
+
+  .userMenu {
+    gap: 0.75rem;
+  }
+  .date {
+    font-size: 0.7rem;
+    line-height: 0;
+  }
+
+  /* .date {
+    display: none;
+  } */
+  .greeting {
+    font-size: 0.9rem;
+  }
+
+  .greetingIcon {
+    width: 18px;
+    height: 18px;
+    margin-bottom: 15px;
+  }
+
+  /* .greeting {
+    display: none;
+  } */
+
+  .searchBar.open {
+    display: flex;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    padding: 0.75rem 1rem;
+    background: white;
+    border-top: 1px solid #eee;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .createBtn {
+    padding: 0.5rem;
+    font-size: 0.6rem;
+  }
+
+  .userInitials {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+  }
 }
