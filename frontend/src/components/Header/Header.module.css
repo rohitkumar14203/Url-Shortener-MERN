@@ -17,8 +17,8 @@
 }
 
 .menuButton img {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   transition: transform 0.3s ease;
 }
 
@@ -148,26 +148,26 @@
   }
   .searchBar {
     padding: 0.4rem;
-    width: 120px;
+    width: 100px;
   }
 
   .searchInput {
-    font-size: 0.6rem;
+    font-size: 0.4rem;
   }
 
   .userMenu {
     gap: 0.75rem;
   }
   .date {
-    font-size: 0.7rem;
-    line-height: 0;
+    font-size: 0.5rem;
+    line-height: 1;
   }
 
   /* .date {
     display: none;
   } */
   .greeting {
-    font-size: 0.9rem;
+    font-size: 0.7rem;
   }
 
   .greetingIcon {
@@ -193,8 +193,8 @@
   }
 
   .createBtn {
-    padding: 0.5rem;
-    font-size: 0.6rem;
+    padding: 0.4rem;
+    font-size: 0.4rem;
   }
 
   .userInitials {
