@@ -2,8 +2,6 @@ import { API_BASE_URL } from "../config/config";
 
 const BASE_URL = `${API_BASE_URL}/api/url`;
 
-console.log("API URL:", BASE_URL); // For debugging
-
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   if (!token) {
@@ -33,12 +31,6 @@ const apiRequest = async (endpoint, options = {}) => {
       },
     };
 
-    console.log(
-      `Making ${options.method || "GET"} request to:`,
-      `${BASE_URL}${endpoint}`
-    );
-    console.log("Request headers:", mergedOptions.headers);
-
     const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
 
     if (response.status === 401) {
@@ -56,7 +48,6 @@ const apiRequest = async (endpoint, options = {}) => {
 
     return data;
   } catch (error) {
-    console.error("URL API Error:", error);
     if (error.message.includes("No authentication token found")) {
       window.location.href = "/login";
     }

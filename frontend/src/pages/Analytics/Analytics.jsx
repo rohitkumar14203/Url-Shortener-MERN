@@ -23,6 +23,7 @@ const Analytics = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
+        console.log("No token found - redirecting to login");
         navigate("/login");
         return;
       }
@@ -32,6 +33,7 @@ const Analytics = () => {
         setVisits(response.data.visits);
       }
     } catch (error) {
+      console.error("Error fetching analytics:", error);
       if (
         error.message.includes("No authentication token found") ||
         error.message.includes("unauthorized")
@@ -45,6 +47,7 @@ const Analytics = () => {
 
   useEffect(() => {
     fetchVisits();
+    // Set up auto-refresh every 30 seconds
     const intervalId = setInterval(fetchVisits, 30000);
     return () => clearInterval(intervalId);
   }, [fetchVisits]);
@@ -63,6 +66,7 @@ const Analytics = () => {
         hour12: false,
       });
     } catch (error) {
+      console.error("Date formatting error:", error);
       return "Invalid Date";
     }
   };

@@ -15,14 +15,13 @@ const visitSchema = new mongoose.Schema(
       type: String,
       default: "Unknown",
     },
-    browser: {
-      type: String,
-      default: "Unknown",
-    },
     ip: {
       type: String,
       default: "Unknown",
-      set: (ip) => ip.replace(/^.*:/, ''), // Remove IPv6 prefix if present
+    },
+    rawHeaders: {
+      type: Object,
+      select: false, // Won't be included in queries by default
     },
   },
   {
@@ -30,6 +29,15 @@ const visitSchema = new mongoose.Schema(
   }
 );
 
+// Pre-save middleware to clean IP address
+visitSchema.pre('save', function(next) {
+  if (this.ip) {
+    // Remove IPv6 prefix if present
+    this.ip = this.ip.replace(/^.*:/, '');
+  }
+  next();
+});
+
 const Visit = mongoose.model("Visit", visitSchema);
 
-export default Visit; 
+export default Visit;

@@ -11,6 +11,7 @@ const apiRequest = async (endpoint, options) => {
       },
     };
 
+    // Get token from localStorage
     const token = localStorage.getItem("token");
     if (token) {
       defaultOptions.headers.Authorization = `Bearer ${token}`;
@@ -25,19 +26,28 @@ const apiRequest = async (endpoint, options) => {
       },
     };
 
+    console.log("Making request to:", `${BASE_URL}${endpoint}`);
+    console.log("With options:", mergedOptions);
+
     const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
     const data = await response.json();
+
+    console.log("Response status:", response.status);
+    console.log("Response data:", data);
 
     if (!response.ok) {
       throw new Error(data.message || "Server error occurred");
     }
 
+    // If this is a login/register response and we got a token, save it
     if (data.token) {
       localStorage.setItem("token", data.token);
     }
 
     return data;
   } catch (error) {
+    console.error("API Error:", error);
+    // If unauthorized, clear token and user data
     if (error.message.includes("Not authorized")) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
