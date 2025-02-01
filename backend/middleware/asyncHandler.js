@@ -1,11 +1,13 @@
-const asyncHandler = (fn) => (req, res, next) => {
-  // Run fn (logOutCurrentUser) safely inside a promise
-  Promise.resolve(
-    fn(req, res, next).catch((error) => {
-      // If fn throws an error, handle it here
-      res.status(500).json({ message: error.message });
-    })
-  );
+const asyncHandler = (fn) => async (req, res, next) => {
+  try {
+    await fn(req, res, next);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(error.status || 500).json({
+      message: error.message || "Server Error",
+      stack: process.env.NODE_ENV === 'production' ? null : error.stack
+    });
+  }
 };
 
 export default asyncHandler;
