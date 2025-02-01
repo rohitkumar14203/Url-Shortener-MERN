@@ -67,22 +67,23 @@ const loginUser = asyncHandler(async (req, res) => {
     if (user && (await bcrypt.compare(password, user.password))) {
       const token = generateToken(user._id);
 
-      // Updated cookie configuration
-      const cookieOptions = {
+      // Set cookie with proper configuration
+      res.cookie("jwt", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-        path: "/",
+        secure: process.env.NODE_ENV === "production", // true in production
+        sameSite: "none", // required for cross-site cookies
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      };
-
-      res.cookie("jwt", token, cookieOptions);
+        path: "/",
+        domain:
+          process.env.NODE_ENV === "production" ? ".render.com" : undefined, // adjust domain based on your Render URL
+      });
 
       return res.json({
         _id: user._id,
         username: user.username,
         email: user.email,
         phoneNumber: user.phoneNumber,
+        token: token,
       });
     } else {
       res.status(401);
@@ -140,11 +141,15 @@ const deleteUserProfile = asyncHandler(async (req, res) => {
 
 const logoutUser = asyncHandler(async (req, res) => {
   try {
-    // Clear cookie using setHeader
-    res.setHeader(
-      "Set-Cookie",
-      "jwt=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0"
-    );
+    res.cookie("jwt", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "none",
+      maxAge: 0,
+      path: "/",
+      domain: process.env.NODE_ENV === "production" ? ".render.com" : undefined,
+    });
+
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     console.error("Logout error:", error);

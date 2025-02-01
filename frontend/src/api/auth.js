@@ -2,7 +2,7 @@ import { API_BASE_URL } from "../config/config";
 
 const BASE_URL = `${API_BASE_URL}/api/users`;
 
-const apiRequest = async (endpoint, options = {}) => {
+const apiRequest = async (endpoint, options) => {
   try {
     const defaultOptions = {
       credentials: "include",
@@ -21,28 +21,20 @@ const apiRequest = async (endpoint, options = {}) => {
       },
     };
 
-    const url = `${BASE_URL}${endpoint}`;
-    console.log("Making request to:", url);
+    const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
 
-    const response = await fetch(url, mergedOptions);
-    console.log("Response status:", response.status);
-    console.log("Response headers:", [...response.headers.entries()]);
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Server error occurred");
-    }
+    console.log("Response headers:", response.headers);
 
     const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Server error occurred");
+    }
+
     return data;
   } catch (error) {
     console.error("API Error:", error);
-    if (error.name === "TypeError" && error.message === "Failed to fetch") {
-      throw new Error(
-        "Unable to connect to server. Please check your internet connection."
-      );
-    }
-    throw error;
+    throw new Error(error.message || "Server error occurred");
   }
 };
 
@@ -54,19 +46,13 @@ export const registerUser = (userData) =>
     body: JSON.stringify(userData),
   });
 
-export const loginUser = async (credentials) => {
-  try {
-    const data = await apiRequest("/login", {
-      method: "POST",
-      credentials: "include",
-      body: JSON.stringify(credentials),
-    });
-    return data;
-  } catch (error) {
-    console.error("Login error:", error);
-    throw error;
-  }
-};
+export const loginUser = (credentials) =>
+  apiRequest("/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(credentials),
+  });
 
 export const logoutUser = () =>
   apiRequest("/logout", {
