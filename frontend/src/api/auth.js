@@ -19,7 +19,10 @@ const apiRequest = async (endpoint, options = {}) => {
         ...defaultOptions.headers,
         ...(options.headers || {}),
       },
+      credentials: "include",
     };
+
+    console.log("Making request with options:", mergedOptions);
 
     const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
     const data = await response.json();
@@ -31,7 +34,7 @@ const apiRequest = async (endpoint, options = {}) => {
     return data;
   } catch (error) {
     console.error("API Error:", error);
-    throw new Error(error.message || "Server error occurred");
+    throw error;
   }
 };
 

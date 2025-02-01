@@ -21,10 +21,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Update CORS configuration
-const FRONTEND_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://url-shortener-mern-one.vercel.app"
-    : "http://localhost:5173";
+const FRONTEND_URL = "https://url-shortener-mern-one.vercel.app";
+// const FRONTEND_URL = "http://localhost:5173";
 
 // CORS configuration
 app.use(
@@ -32,20 +30,18 @@ app.use(
     origin: FRONTEND_URL,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["set-cookie"],
+    allowedHeaders: ["Content-Type", "Authorization", "Accept"],
+    exposedHeaders: ["Set-Cookie"],
   })
 );
 
-// Update security headers
+// Remove the duplicate CORS headers since we're using the cors middleware
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Origin", FRONTEND_URL);
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-  );
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  // Only set cookie settings
+  res.set({
+    "Access-Control-Allow-Credentials": true,
+    "Access-Control-Allow-Origin": FRONTEND_URL,
+  });
   next();
 });
 

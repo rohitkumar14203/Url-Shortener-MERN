@@ -7,24 +7,26 @@ const authenticate = asyncHandler(async (req, res, next) => {
     const token = req.cookies.jwt;
 
     if (!token) {
-      res.status(401);
-      throw new Error("Not authorized, no token");
+      return res.status(401).json({ message: "Not authorized, no token" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId).select("-password");
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.userId).select("-password");
 
-    if (!user) {
-      res.status(401);
-      throw new Error("User not found");
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      req.user = user;
+      next();
+    } catch (error) {
+      console.error("Token verification error:", error);
+      return res.status(401).json({ message: "Invalid token" });
     }
-
-    req.user = user;
-    next();
   } catch (error) {
     console.error("Auth error:", error);
-    res.status(401);
-    throw new Error(error.message || "Not authorized");
+    return res.status(401).json({ message: "Authentication failed" });
   }
 });
 
