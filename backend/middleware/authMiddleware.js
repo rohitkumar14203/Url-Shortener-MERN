@@ -9,6 +9,7 @@ const authenticate = asyncHandler(async (req, res, next) => {
   console.log("Auth Headers:", {
     authorization: req.headers.authorization,
     cookie: req.headers.cookie,
+    allHeaders: req.headers,
   });
 
   // First try to get token from Authorization header
@@ -28,7 +29,7 @@ const authenticate = asyncHandler(async (req, res, next) => {
   }
 
   if (!token) {
-    console.log("No token found in request");
+    console.log("No token found in request. Headers:", req.headers);
     res.status(401);
     throw new Error("Not authorized, no token");
   }

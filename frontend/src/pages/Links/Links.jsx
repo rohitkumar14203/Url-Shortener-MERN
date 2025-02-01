@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import { notify } from "../../utils/notify";
-import { useOutletContext, useLocation } from "react-router-dom";
+import { useOutletContext, useLocation, useNavigate } from "react-router-dom";
 import styles from "./Links.module.css";
 import Modal from "../../components/Modal/Modal";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
@@ -12,6 +12,7 @@ import copyIcon from "../../assets/copy.png";
 import arrowIcon from "../../assets/arrow.svg";
 import arrow1Icon from "../../assets/arrow1.svg";
 import { API_BASE_URL } from "../../config/config";
+import { useAuth } from '../../context/AuthContext';
 
 const ITEMS_PER_PAGE = 9;
 
@@ -24,6 +25,14 @@ const Links = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const { setRefreshCallback } = useOutletContext();
   const location = useLocation();
+  const { token, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
 
   // Reset page when data changes
   useEffect(() => {

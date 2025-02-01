@@ -14,12 +14,15 @@ const apiRequest = async (endpoint, options) => {
       throw new Error("Please login to continue");
     }
 
+    // Create headers with token
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+
     const defaultOptions = {
       credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers,
     };
 
     const mergedOptions = {
@@ -32,9 +35,13 @@ const apiRequest = async (endpoint, options) => {
     };
 
     console.log("Making request with token:", token);
+    console.log("Request URL:", `${BASE_URL}${endpoint}`);
     console.log("Request options:", mergedOptions);
 
     const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
+
+    // Log the actual request headers for debugging
+    console.log("Request headers sent:", mergedOptions.headers);
 
     if (response.status === 401) {
       console.log("Unauthorized request - clearing token");
@@ -58,23 +65,44 @@ const apiRequest = async (endpoint, options) => {
 };
 
 export const getAllUrls = async () => {
-  const data = await apiRequest("/all", {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    throw new Error("No authentication token found");
+  }
+
+  return apiRequest("/all", {
     method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
-  return data;
 };
 
 export const createShortUrl = async (urlData) => {
-  const data = await apiRequest("/shorten", {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    throw new Error("No authentication token found");
+  }
+
+  return apiRequest("/shorten", {
     method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(urlData),
   });
-  return data;
 };
 
 export const deleteUrl = async (urlId) => {
-  const data = await apiRequest(`/${urlId}`, {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    throw new Error("No authentication token found");
+  }
+
+  return apiRequest(`/${urlId}`, {
     method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
-  return data;
 };

@@ -28,10 +28,11 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Set-Cookie"],
   })
 );
 
-// Debug middleware to log requests
+// Debug middleware to log all requests
 app.use((req, res, next) => {
   console.log("Incoming request:", {
     method: req.method,
@@ -39,6 +40,8 @@ app.use((req, res, next) => {
     headers: {
       authorization: req.headers.authorization,
       cookie: req.headers.cookie,
+      origin: req.headers.origin,
+      host: req.headers.host,
     },
     cookies: req.cookies,
   });

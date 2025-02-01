@@ -9,9 +9,9 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [loading, setLoading] = useState(true);
 
-  // Check authentication status on mount and token change
+  // Check authentication status on mount
   useEffect(() => {
-    const checkAuth = async () => {
+    const initializeAuth = async () => {
       const storedToken = localStorage.getItem("token");
       if (storedToken) {
         try {
@@ -19,6 +19,7 @@ export const AuthProvider = ({ children }) => {
           setUser(userData);
           setToken(storedToken);
         } catch (error) {
+          console.error("Auth initialization error:", error);
           localStorage.removeItem("token");
           localStorage.removeItem("user");
           setToken(null);
@@ -28,18 +29,25 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     };
 
-    checkAuth();
+    initializeAuth();
   }, []);
+
+  // Update token in localStorage whenever it changes
+  useEffect(() => {
+    if (token) {
+      localStorage.setItem("token", token);
+    } else {
+      localStorage.removeItem("token");
+    }
+  }, [token]);
 
   const login = async (credentials) => {
     try {
       const data = await loginUser(credentials);
       if (data.token) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data));
         setToken(data.token);
         setUser(data);
-        console.log("Token stored after login:", data.token);
+        localStorage.setItem("user", JSON.stringify(data));
         toast.success("Login successful");
       } else {
         throw new Error("No token received from server");
@@ -52,55 +60,31 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (userData) => {
-    try {
-      const data = await registerUser(userData);
-      setUser(data);
-      // Save user data in localStorage
-      localStorage.setItem("user", JSON.stringify(data));
-      return data;
-    } catch (error) {
-      console.error("Register error:", error);
-      throw error;
-    }
-  };
-
   const logout = async () => {
     try {
-      const token = localStorage.getItem("token");
       if (token) {
         await logoutUser();
       }
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
       setToken(null);
       setUser(null);
-      console.log("Token cleared after logout");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
     }
   };
 
-  const updateUserContext = (userData) => {
-    setUser(userData);
+  const value = {
+    user,
+    token,
+    loading,
+    login,
+    logout,
+    isAuthenticated: !!token,
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        login,
-        logout,
-        register,
-        loading,
-        updateUserContext,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
