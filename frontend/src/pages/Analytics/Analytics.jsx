@@ -29,7 +29,9 @@ const Analytics = () => {
       }
 
       const response = await getAllUrls();
-      setVisits(response.data.visits); // Data is already sorted by timestamp
+      if (response.data && response.data.visits) {
+        setVisits(response.data.visits);
+      }
     } catch (error) {
       console.error("Error fetching analytics:", error);
       if (
@@ -75,6 +77,11 @@ const Analytics = () => {
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedVisits = visits.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
+  const getDeviceIcon = (device) => {
+    // You can add device-specific icons here
+    return "📱";
+  };
+
   // If current page is greater than total pages, reset to last page
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -97,7 +104,8 @@ const Analytics = () => {
               <th>Original Link</th>
               <th>Short Link</th>
               <th>IP Address</th>
-              <th>User Device</th>
+              <th>Device</th>
+              <th>Browser</th>
             </tr>
           </thead>
           <tbody>
@@ -106,21 +114,38 @@ const Analytics = () => {
                 <td>{formatDate(visit.timestamp)}</td>
                 <td className={styles.urlCell}>
                   <div className={styles.urlWrapper}>
-                    <span>{visit.originalUrl}</span>
+                    <a
+                      href={visit.originalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {visit.originalUrl}
+                    </a>
                   </div>
                 </td>
                 <td className={styles.urlCell}>
                   <div className={styles.urlWrapper}>
-                    <span>{visit.shortUrl}</span>
+                    <a
+                      href={visit.shortUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {visit.shortUrl}
+                    </a>
                   </div>
                 </td>
                 <td>{visit.ipAddress || "Unknown"}</td>
-                <td>{visit.device || "Unknown"}</td>
+                <td>
+                  <span className={styles.deviceInfo}>
+                    {getDeviceIcon(visit.device)} {visit.device}
+                  </span>
+                </td>
+                <td>{visit.browser || "Unknown"}</td>
               </tr>
             ))}
             {visits.length === 0 && (
               <tr>
-                <td colSpan="5" className={styles.noData}>
+                <td colSpan="6" className={styles.noData}>
                   No visits recorded yet
                 </td>
               </tr>

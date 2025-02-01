@@ -49,16 +49,71 @@ const getAllUrls = asyncHandler(async (req, res) => {
   const urls = await URL.find({ user: req.user._id }).sort({ createdAt: -1 });
   const visits = await Visit.find({
     url: { $in: urls.map((url) => url._id) },
-  }).sort({ timestamp: -1 });
+  })
+    .sort({ timestamp: -1 })
+    .populate("url", "originalUrl shortUrl"); // Populate URL details
+
+  // Format visit data with URL details
+  const formattedVisits = visits.map((visit) => ({
+    _id: visit._id,
+    timestamp: visit.timestamp,
+    originalUrl: visit.url.originalUrl,
+    shortUrl: visit.url.shortUrl,
+    ipAddress: visit.ip,
+    device: determineDevice(visit.device), // Helper function to determine device
+    browser: getBrowser(visit.device), // Helper function to get browser info
+  }));
 
   res.json({
     success: true,
     data: {
       urls,
-      visits,
+      visits: formattedVisits,
     },
   });
 });
+
+// Helper function to determine device type
+const determineDevice = (userAgent) => {
+  if (!userAgent) return "Unknown";
+
+  const ua = userAgent.toLowerCase();
+  if (ua.includes("android")) {
+    return "Android";
+  } else if (
+    ua.includes("iphone") ||
+    ua.includes("ipad") ||
+    ua.includes("ios")
+  ) {
+    return "iOS";
+  } else if (ua.includes("macintosh") || ua.includes("mac os")) {
+    return "Mac";
+  } else if (ua.includes("windows")) {
+    return "Windows";
+  } else if (ua.includes("linux")) {
+    return "Linux";
+  }
+  return "Other";
+};
+
+// Helper function to get browser info
+const getBrowser = (userAgent) => {
+  if (!userAgent) return "Unknown";
+
+  const ua = userAgent.toLowerCase();
+  if (ua.includes("chrome")) {
+    return "Chrome";
+  } else if (ua.includes("firefox")) {
+    return "Firefox";
+  } else if (ua.includes("safari")) {
+    return "Safari";
+  } else if (ua.includes("edge")) {
+    return "Edge";
+  } else if (ua.includes("opera")) {
+    return "Opera";
+  }
+  return "Other";
+};
 
 // @desc    Delete URL
 // @route   DELETE /api/url/:id
