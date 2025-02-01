@@ -27,16 +27,28 @@ const createShortUrl = asyncHandler(async (req, res) => {
     throw new Error("Original URL is required");
   }
 
+  // Generate a unique short URL
+  const shortUrl = Math.random().toString(36).substring(2, 8);
+
   const url = await URL.create({
     user: req.user._id,
     originalUrl,
+    shortUrl,
     expirationDate: expirationDate || null,
     remarks: remarks || "",
   });
 
+  // Return the full short URL
+  const fullShortUrl = `${
+    process.env.API_BASE_URL || "http://localhost:5000"
+  }/${url.shortUrl}`;
+
   res.status(201).json({
     success: true,
-    data: url,
+    data: {
+      ...url.toObject(),
+      fullShortUrl,
+    },
   });
 });
 
@@ -122,21 +134,24 @@ const recordVisit = asyncHandler(async (req, res) => {
     throw new Error("URL not found");
   }
 
-  // Create visit record
+  // Create visit record with more details
   await Visit.create({
     url: url._id,
     device: req.headers["user-agent"] || "Unknown",
-    ip: req.ip,
+    ip: req.ip || req.headers["x-forwarded-for"] || "Unknown",
+    browser: req.headers["user-agent"] || "Unknown",
   });
 
   // Increment click count
   url.clicks += 1;
   await url.save();
 
+  // Return the original URL for redirection
   res.json({
     success: true,
     data: {
       originalUrl: url.originalUrl,
+      shortUrl: url.shortUrl,
     },
   });
 });

@@ -7,6 +7,8 @@ import connectDB from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
 import urlRoutes from "./routes/urlRoutes.js";
 import cors from "cors";
+import URL from "./models/urlModel.js";
+import Visit from "./models/visitModel.js";
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -64,26 +66,38 @@ app.get("/favicon.ico", (req, res) => {
 // Handle URL redirects
 app.get("/:shortUrl", async (req, res) => {
   try {
-    const response = await fetch(
-      `${process.env.API_BASE_URL || "http://localhost:5000"}/api/url/visit/${
-        req.params.shortUrl
-      }`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    // Make internal request to visit endpoint
+    const url = await URL.findOne({ shortUrl: req.params.shortUrl });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to record visit");
+    if (!url) {
+      return res.status(404).json({ message: "URL not found or invalid" });
     }
 
-    res.redirect(data.data.originalUrl);
+    // Record the visit
+    await Visit.create({
+      url: url._id,
+      device: req.headers["user-agent"] || "Unknown",
+      ip: req.ip || req.headers["x-forwarded-for"] || "Unknown",
+      browser: req.headers["user-agent"] || "Unknown",
+    });
+
+    // Increment click count
+    url.clicks += 1;
+    await url.save();
+
+    // Ensure the URL starts with http:// or https://
+    let redirectUrl = url.originalUrl;
+    if (
+      !redirectUrl.startsWith("http://") &&
+      !redirectUrl.startsWith("https://")
+    ) {
+      redirectUrl = "https://" + redirectUrl;
+    }
+
+    // Redirect to the original URL
+    res.redirect(redirectUrl);
   } catch (error) {
+    console.error("Redirect error:", error);
     res.status(404).json({ message: "URL not found or invalid" });
   }
 });
