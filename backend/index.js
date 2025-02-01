@@ -19,8 +19,9 @@ connectDB();
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-const FRONTEND_URL = "https://url-shortener-mern-one.vercel.app";
+
+const FRONTEND_URL =
+  process.env.FRONTEND_URL || "https://url-shortener-mern-one.vercel.app";
 // const FRONTEND_URL = " http://localhost:5173";
 // CORS configuration
 app.use(
@@ -35,7 +36,6 @@ app.use(
       "Accept",
       "Origin",
     ],
-    exposedHeaders: ["Set-Cookie"],
   })
 );
 

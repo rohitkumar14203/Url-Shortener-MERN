@@ -21,20 +21,20 @@ const apiRequest = async (endpoint, options) => {
       },
     };
 
+    console.log("Making request to:", `${BASE_URL}${endpoint}`);
     const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
 
-    console.log("Response headers:", response.headers);
-
-    const data = await response.json();
-
     if (!response.ok) {
-      throw new Error(data.message || "Server error occurred");
+      const errorData = await response.json();
+      console.error("API Error Response:", errorData);
+      throw new Error(errorData.message || "Server error occurred");
     }
 
+    const data = await response.json();
     return data;
   } catch (error) {
-    console.error("API Error:", error);
-    throw new Error(error.message || "Server error occurred");
+    console.error("API Request Error:", error);
+    throw error;
   }
 };
 

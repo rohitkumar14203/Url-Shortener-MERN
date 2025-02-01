@@ -67,15 +67,14 @@ const loginUser = asyncHandler(async (req, res) => {
     if (user && (await bcrypt.compare(password, user.password))) {
       const token = generateToken(user._id);
 
-      // Set cookie with proper configuration
+      // Update cookie configuration
       res.cookie("jwt", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production", // true in production
-        sameSite: "none", // required for cross-site cookies
+        secure: true, // Always use secure in production
+        sameSite: "none",
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         path: "/",
-        domain:
-          process.env.NODE_ENV === "production" ? ".render.com" : undefined, // adjust domain based on your Render URL
+        // Remove domain setting to allow the browser to handle it
       });
 
       return res.json({
@@ -143,11 +142,11 @@ const logoutUser = asyncHandler(async (req, res) => {
   try {
     res.cookie("jwt", "", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "none",
       maxAge: 0,
       path: "/",
-      domain: process.env.NODE_ENV === "production" ? ".render.com" : undefined,
+      // Remove domain setting
     });
 
     res.status(200).json({ message: "Logged out successfully" });
