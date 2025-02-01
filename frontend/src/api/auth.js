@@ -21,15 +21,8 @@ const apiRequest = async (endpoint, options) => {
       },
     };
 
-    console.log("Request URL:", `${BASE_URL}${endpoint}`);
-    console.log("Request Options:", mergedOptions);
-
     const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
-    console.log("Response Status:", response.status);
-    console.log("Response Headers:", [...response.headers.entries()]);
-
     const data = await response.json();
-    console.log("Response Data:", data);
 
     if (!response.ok) {
       throw new Error(data.message || "Server error occurred");
@@ -37,8 +30,7 @@ const apiRequest = async (endpoint, options) => {
 
     return data;
   } catch (error) {
-    console.error("API Error:", error);
-    throw error;
+    throw new Error(error.message || "Server error occurred");
   }
 };
 
@@ -50,37 +42,13 @@ export const registerUser = (userData) =>
     body: JSON.stringify(userData),
   });
 
-export const loginUser = async (credentials) => {
-  try {
-    console.log("Attempting login...");
-    const response = await apiRequest("/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include", // Important!
-      body: JSON.stringify(credentials),
-    });
-
-    // After successful login, immediately test if cookie was set
-    console.log("Login successful, testing cookie...");
-    try {
-      const testResponse = await fetch(`${BASE_URL}/profile`, {
-        method: "GET",
-        credentials: "include",
-      });
-      console.log("Cookie test response:", testResponse);
-      console.log("Cookie test headers:", [...testResponse.headers.entries()]);
-    } catch (error) {
-      console.error("Cookie test failed:", error);
-    }
-
-    return response;
-  } catch (error) {
-    console.error("Login failed:", error);
-    throw error;
-  }
-};
+export const loginUser = (credentials) =>
+  apiRequest("/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(credentials),
+  });
 
 export const logoutUser = () =>
   apiRequest("/logout", {

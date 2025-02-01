@@ -67,20 +67,13 @@ const loginUser = asyncHandler(async (req, res) => {
     if (user && (await bcrypt.compare(password, user.password))) {
       const token = generateToken(user._id);
 
-      // Log before setting cookie
-      console.log("Setting cookie with token:", token);
-
-      // Set cookie with explicit options
-      res.cookie("jwt", token, {
-        httpOnly: true,
-        secure: true, // Required for cross-site cookies
-        sameSite: "none", // Required for cross-site cookies
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        path: "/",
-      });
-
-      // Log after setting cookie
-      console.log("Cookie set. Response headers:", res.getHeaders());
+      // Set cookie using setHeader
+      res.setHeader(
+        "Set-Cookie",
+        `jwt=${token}; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=${
+          30 * 24 * 60 * 60
+        }`
+      );
 
       return res.json({
         _id: user._id,
@@ -145,14 +138,11 @@ const deleteUserProfile = asyncHandler(async (req, res) => {
 
 const logoutUser = asyncHandler(async (req, res) => {
   try {
-    res.cookie("jwt", "", {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 0,
-      path: "/",
-    });
-
+    // Clear cookie using setHeader
+    res.setHeader(
+      "Set-Cookie",
+      "jwt=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0"
+    );
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     console.error("Logout error:", error);

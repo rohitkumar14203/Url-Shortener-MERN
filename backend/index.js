@@ -16,12 +16,10 @@ const port = process.env.PORT || 5000;
 connectDB();
 
 // Apply middlewares in correct order
-app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-const FRONTEND_URL =
-  process.env.FRONTEND_URL || "https://url-shortener-mern-one.vercel.app";
+app.use(cookieParser());
+const FRONTEND_URL = "https://url-shortener-mern-one.vercel.app";
 // const FRONTEND_URL = " http://localhost:5173";
 // CORS configuration
 app.use(
@@ -36,17 +34,22 @@ app.use(
       "Accept",
       "Origin",
     ],
+    exposedHeaders: ["Set-Cookie"],
   })
 );
 
-// Add this middleware to log all requests
+// Set security headers
 app.use((req, res, next) => {
-  console.log("Request:", {
-    method: req.method,
-    path: req.path,
-    cookies: req.cookies,
-    headers: req.headers,
-  });
+  res.setHeader("Access-Control-Allow-Origin", FRONTEND_URL);
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+  );
   next();
 });
 
