@@ -36,9 +36,19 @@ app.use(
       "Accept",
       "Origin",
     ],
-    exposedHeaders: ["Set-Cookie"],
   })
 );
+
+// Add this middleware to log all requests
+app.use((req, res, next) => {
+  console.log("Request:", {
+    method: req.method,
+    path: req.path,
+    cookies: req.cookies,
+    headers: req.headers,
+  });
+  next();
+});
 
 // Health check route
 app.get("/", (req, res) => {

@@ -67,14 +67,20 @@ const loginUser = asyncHandler(async (req, res) => {
     if (user && (await bcrypt.compare(password, user.password))) {
       const token = generateToken(user._id);
 
-      // Update cookie configuration
+      // Log before setting cookie
+      console.log("Setting cookie with token:", token);
+
+      // Set cookie with explicit options
       res.cookie("jwt", token, {
         httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        maxAge: 30 * 24 * 60 * 60 * 1000,
+        secure: true, // Required for cross-site cookies
+        sameSite: "none", // Required for cross-site cookies
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         path: "/",
       });
+
+      // Log after setting cookie
+      console.log("Cookie set. Response headers:", res.getHeaders());
 
       return res.json({
         _id: user._id,

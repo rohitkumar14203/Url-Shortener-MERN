@@ -50,13 +50,37 @@ export const registerUser = (userData) =>
     body: JSON.stringify(userData),
   });
 
-export const loginUser = (credentials) =>
-  apiRequest("/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(credentials),
-  });
+export const loginUser = async (credentials) => {
+  try {
+    console.log("Attempting login...");
+    const response = await apiRequest("/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // Important!
+      body: JSON.stringify(credentials),
+    });
+
+    // After successful login, immediately test if cookie was set
+    console.log("Login successful, testing cookie...");
+    try {
+      const testResponse = await fetch(`${BASE_URL}/profile`, {
+        method: "GET",
+        credentials: "include",
+      });
+      console.log("Cookie test response:", testResponse);
+      console.log("Cookie test headers:", [...testResponse.headers.entries()]);
+    } catch (error) {
+      console.error("Cookie test failed:", error);
+    }
+
+    return response;
+  } catch (error) {
+    console.error("Login failed:", error);
+    throw error;
+  }
+};
 
 export const logoutUser = () =>
   apiRequest("/logout", {

@@ -26,4 +26,16 @@ router.get("/test-auth", authenticate, (req, res) => {
   });
 });
 
+// Add at the beginning of your routes
+router.get("/test-cookies", (req, res) => {
+  console.log("All Cookies:", req.cookies);
+  console.log("JWT Cookie:", req.cookies.jwt);
+  console.log("Headers:", req.headers);
+  res.json({
+    cookies: req.cookies,
+    jwt: req.cookies.jwt,
+    headers: req.headers,
+  });
+});
+
 export default router;
