@@ -11,7 +11,7 @@ const apiRequest = async (endpoint, options) => {
       },
     };
 
-    // If we have a token in localStorage, add it to headers
+    // Get token from localStorage
     const token = localStorage.getItem("token");
     if (token) {
       defaultOptions.headers.Authorization = `Bearer ${token}`;
@@ -26,13 +26,12 @@ const apiRequest = async (endpoint, options) => {
       },
     };
 
-    console.log("Making request to:", `${BASE_URL}${endpoint}`); // Debug log
-    console.log("With options:", mergedOptions); // Debug log
+    console.log("Making request to:", `${BASE_URL}${endpoint}`);
+    console.log("With options:", mergedOptions);
 
     const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
     const data = await response.json();
 
-    // Debug logs
     console.log("Response status:", response.status);
     console.log("Response data:", data);
 
@@ -43,11 +42,13 @@ const apiRequest = async (endpoint, options) => {
     // If this is a login/register response and we got a token, save it
     if (data.token) {
       localStorage.setItem("token", data.token);
+      // Also store the token in a cookie for backup
+      document.cookie = `jwt=${data.token}; path=/; secure; samesite=none`;
     }
 
     return data;
   } catch (error) {
-    console.error("API Error:", error); // Debug log
+    console.error("API Error:", error);
     throw new Error(error.message || "Server error occurred");
   }
 };

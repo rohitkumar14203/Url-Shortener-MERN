@@ -22,11 +22,14 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await loginUser(credentials);
       setUser(data);
-      // Save user data in localStorage
+      // Save both user data and token
       localStorage.setItem("user", JSON.stringify(data));
+      localStorage.setItem("token", data.token);
+      toast.success("Login successful");
       return data;
     } catch (error) {
       console.error("Login error:", error);
+      toast.error(error.message);
       throw error;
     }
   };

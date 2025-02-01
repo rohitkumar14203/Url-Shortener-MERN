@@ -32,10 +32,14 @@ const apiRequest = async (endpoint, options) => {
     console.log("With options:", mergedOptions);
 
     const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
-    const data = await response.json();
 
-    console.log("URL Response status:", response.status);
-    console.log("URL Response data:", data);
+    // Handle 401 by redirecting to login
+    if (response.status === 401) {
+      window.location.href = "/login";
+      throw new Error("Please login again");
+    }
+
+    const data = await response.json();
 
     if (!response.ok) {
       throw new Error(data.message || "Server error occurred");
