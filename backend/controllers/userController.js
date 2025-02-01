@@ -6,55 +6,52 @@ import generateToken from "../utils/generateToken.js";
 const registerUser = asyncHandler(async (req, res) => {
   const { username, email, password, phoneNumber } = req.body;
 
-  try {
-    // Check if all fields are provided
-    if (!username || !email || !password || !phoneNumber) {
-      res.status(400);
-      throw new Error("Please fill in all fields");
-    }
+  // Check if all fields are provided
+  if (!username || !email || !password || !phoneNumber) {
+    res.status(400);
+    throw new Error("Please fill in all fields");
+  }
 
-    const userExists = await User.findOne({ email });
+  const userExists = await User.findOne({ email });
 
-    // Check if user already exists
-    if (userExists) {
-      res.status(400);
-      throw new Error("User already exists");
-    }
+  // Check if user already exists
+  if (userExists) {
+    res.status(400);
+    throw new Error("User already exists");
+  }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
 
-    const user = await User.create({
-      username,
-      email,
-      phoneNumber,
-      password: hashedPassword,
+  const user = await User.create({
+    username,
+    email,
+    phoneNumber,
+    password: hashedPassword,
+  });
+
+  if (user) {
+    const token = generateToken(user._id);
+
+    // Set cookie with proper configuration
+    res.cookie("jwt", token, {
+      httpOnly: true,
+      secure: true, // Always use secure in production
+      sameSite: "None",
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      path: "/",
     });
 
-    if (user) {
-      const token = generateToken(user._id);
-
-      // Set cookie using setHeader
-      res.setHeader(
-        "Set-Cookie",
-        `jwt=${token}; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=${
-          30 * 24 * 60 * 60
-        }`
-      );
-
-      return res.status(201).json({
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        phoneNumber: user.phoneNumber,
-        token: token,
-      });
-    }
-  } catch (error) {
-    console.error("Registration error:", error);
-    res.status(500).json({
-      message: error.message || "An error occurred during registration",
+    res.status(201).json({
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      token,
     });
+  } else {
+    res.status(400);
+    throw new Error("Invalid user data");
   }
 });
 
@@ -131,19 +128,15 @@ const deleteUserProfile = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-  try {
-    // Clear cookie using setHeader
-    res.setHeader(
-      "Set-Cookie",
-      "jwt=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0"
-    );
-    res.status(200).json({ message: "Logged out successfully" });
-  } catch (error) {
-    console.error("Logout error:", error);
-    res.status(500).json({
-      message: error.message || "An error occurred during logout",
-    });
-  }
+  res.cookie("jwt", "", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "None",
+    expires: new Date(0),
+    path: "/",
+  });
+
+  res.status(200).json({ message: "Logged out successfully" });
 });
 
 const getCurrentUserProfile = asyncHandler(async (req, res) => {

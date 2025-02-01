@@ -5,12 +5,17 @@ const BASE_URL = `${API_BASE_URL}/api/users`;
 const apiRequest = async (endpoint, options) => {
   try {
     const defaultOptions = {
-      credentials: "include", // Important for cookies
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        Accept: "application/json",
       },
     };
+
+    // If we have a token in localStorage, add it to headers
+    const token = localStorage.getItem("token");
+    if (token) {
+      defaultOptions.headers.Authorization = `Bearer ${token}`;
+    }
 
     const mergedOptions = {
       ...defaultOptions,
@@ -26,6 +31,11 @@ const apiRequest = async (endpoint, options) => {
 
     if (!response.ok) {
       throw new Error(data.message || "Server error occurred");
+    }
+
+    // If this is a login/register response and we got a token, save it
+    if (data.token) {
+      localStorage.setItem("token", data.token);
     }
 
     return data;
