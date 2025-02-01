@@ -13,11 +13,14 @@ const apiRequest = async (endpoint, options) => {
       },
     };
 
-    // Get token from localStorage
     const token = localStorage.getItem("token");
-    if (token) {
-      defaultOptions.headers.Authorization = `Bearer ${token}`;
+    if (!token) {
+      // Redirect to login if no token
+      window.location.href = "/login";
+      throw new Error("Please login to continue");
     }
+
+    defaultOptions.headers.Authorization = `Bearer ${token}`;
 
     const mergedOptions = {
       ...defaultOptions,
@@ -28,15 +31,14 @@ const apiRequest = async (endpoint, options) => {
       },
     };
 
-    console.log("Making URL request to:", `${BASE_URL}${endpoint}`);
-    console.log("With options:", mergedOptions);
-
     const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
 
-    // Handle 401 by redirecting to login
     if (response.status === 401) {
+      // Clear invalid token
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
       window.location.href = "/login";
-      throw new Error("Please login again");
+      throw new Error("Session expired. Please login again");
     }
 
     const data = await response.json();

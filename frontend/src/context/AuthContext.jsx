@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { loginUser, registerUser, logoutUser } from "../api/auth";
+import { loginUser, registerUser, logoutUser, getUser } from "../api/auth";
 import { toast } from "react-toastify";
 
 const AuthContext = createContext();
@@ -8,27 +8,39 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Check authentication status on mount and token change
   useEffect(() => {
-    // Check for token and user data in localStorage on mount
-    const token = localStorage.getItem("token");
-    const savedUser = localStorage.getItem("user");
-    if (token && savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
+    const checkAuth = async () => {
+      const token = localStorage.getItem("token");
+      const savedUser = localStorage.getItem("user");
+
+      if (token && savedUser) {
+        try {
+          // Verify token is still valid
+          const userData = await getUser();
+          setUser(userData);
+        } catch (error) {
+          // If token is invalid, clear storage
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          setUser(null);
+        }
+      }
+      setLoading(false);
+    };
+
+    checkAuth();
   }, []);
 
   const login = async (credentials) => {
     try {
       const data = await loginUser(credentials);
       setUser(data);
-      // Save both user data and token
       localStorage.setItem("user", JSON.stringify(data));
       localStorage.setItem("token", data.token);
       toast.success("Login successful");
       return data;
     } catch (error) {
-      console.error("Login error:", error);
       toast.error(error.message);
       throw error;
     }
@@ -50,13 +62,13 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await logoutUser();
-      setUser(null);
-      // Clear localStorage
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
     } catch (error) {
       console.error("Logout error:", error);
-      throw error;
+    } finally {
+      // Always clear local storage and state
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setUser(null);
     }
   };
 

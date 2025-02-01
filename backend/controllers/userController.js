@@ -70,7 +70,6 @@ const loginUser = asyncHandler(async (req, res) => {
       sameSite: "None",
       maxAge: 30 * 24 * 60 * 60 * 1000,
       path: "/",
-      domain: ".onrender.com",
     });
 
     // Send response with user data and token

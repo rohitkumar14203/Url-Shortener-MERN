@@ -42,14 +42,17 @@ const apiRequest = async (endpoint, options) => {
     // If this is a login/register response and we got a token, save it
     if (data.token) {
       localStorage.setItem("token", data.token);
-      // Also store the token in a cookie for backup
-      document.cookie = `jwt=${data.token}; path=/; secure; samesite=none`;
     }
 
     return data;
   } catch (error) {
     console.error("API Error:", error);
-    throw new Error(error.message || "Server error occurred");
+    // If unauthorized, clear token and user data
+    if (error.message.includes("Not authorized")) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+    }
+    throw error;
   }
 };
 
