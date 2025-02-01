@@ -1,6 +1,7 @@
 import styles from "./Header.module.css";
 import { useAuth } from "../../context/AuthContext";
 import { logoutUser } from "../../api/auth";
+import { createShortUrl } from "../../api/url";
 import { useNavigate, useLocation } from "react-router-dom";
 import sunIcon from "../../assets/Header-Icons/sun1.png";
 import nightIcon from "../../assets/Header-Icons/night.png";
@@ -9,9 +10,7 @@ import afternoonIcon from "../../assets/Header-Icons/afternoon.png";
 import searchIcon from "../../assets/Header-Icons/search.png";
 import { useState, useEffect } from "react";
 import Modal from "../Modal/Modal";
-import { API_BASE_URL } from "../../config/config";
-import { notify } from "../../utils/notify";
-
+import { toast } from "react-toastify";
 import menuIcon from "../../assets/Hamburg.png";
 
 const Header = ({
@@ -38,31 +37,24 @@ const Header = ({
     try {
       await logoutUser();
       logout();
-      notify("Logged out successfully");
+      toast.success("Logged out successfully");
       navigate("/login");
     } catch (error) {
-      notify(error.message, "error");
+      toast.error(error.message || "Failed to logout");
     }
   };
 
   const handleCreateLink = async (formData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/url/shorten`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to create short URL");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.log("No token found - redirecting to login");
+        navigate("/login");
+        return;
       }
 
-      notify("Short URL created successfully");
+      const response = await createShortUrl(formData);
+      toast.success("Short URL created successfully");
       setIsModalOpen(false);
 
       // If we're on the links page, refresh the list
@@ -73,7 +65,15 @@ const Header = ({
         navigate("/link");
       }
     } catch (error) {
-      notify(error.message, "error");
+      console.error("Error creating URL:", error);
+      if (
+        error.message.includes("No authentication token found") ||
+        error.message.includes("unauthorized")
+      ) {
+        navigate("/login");
+      } else {
+        toast.error(error.message || "Failed to create short URL");
+      }
     }
   };
 
