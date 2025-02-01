@@ -26,8 +26,15 @@ const apiRequest = async (endpoint, options) => {
       },
     };
 
+    console.log('Making request to:', `${BASE_URL}${endpoint}`); // Debug log
+    console.log('With options:', mergedOptions); // Debug log
+
     const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
     const data = await response.json();
+
+    // Debug logs
+    console.log('Response status:', response.status);
+    console.log('Response data:', data);
 
     if (!response.ok) {
       throw new Error(data.message || "Server error occurred");
@@ -40,48 +47,46 @@ const apiRequest = async (endpoint, options) => {
 
     return data;
   } catch (error) {
+    console.error('API Error:', error); // Debug log
     throw new Error(error.message || "Server error occurred");
   }
 };
 
-export const registerUser = (userData) =>
-  apiRequest("/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(userData),
-  });
-
+// Simplified API functions that use the base apiRequest
 export const loginUser = (credentials) =>
   apiRequest("/login", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
     body: JSON.stringify(credentials),
   });
 
-export const logoutUser = () =>
-  apiRequest("/logout", {
+export const registerUser = (userData) =>
+  apiRequest("/register", {
     method: "POST",
-    credentials: "include",
+    body: JSON.stringify(userData),
   });
+
+export const logoutUser = async () => {
+  try {
+    await apiRequest("/logout", { method: "POST" });
+    localStorage.removeItem("token"); // Clear token on logout
+  } catch (error) {
+    console.error('Logout error:', error);
+    throw error;
+  }
+};
 
 export const getUser = () =>
   apiRequest("/profile", {
     method: "GET",
-    credentials: "include",
   });
 
 export const updateUser = (userData) =>
   apiRequest("/profile", {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
     body: JSON.stringify(userData),
   });
 
 export const deleteUser = () =>
   apiRequest("/profile", {
     method: "DELETE",
-    credentials: "include",
   });
