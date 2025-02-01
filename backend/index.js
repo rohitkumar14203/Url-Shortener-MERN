@@ -20,19 +20,30 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const FRONTEND_URL = "https://url-shortener-mern-one.vercel.app";
-// const FRONTEND_URL = " http://localhost:5173";
-
 // CORS configuration
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin:
+      process.env.FRONTEND_URL || "https://url-shortener-mern-one.vercel.app",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["Set-Cookie"],
   })
 );
+
+// Debug middleware to log requests
+app.use((req, res, next) => {
+  console.log("Incoming request:", {
+    method: req.method,
+    path: req.path,
+    headers: {
+      authorization: req.headers.authorization,
+      cookie: req.headers.cookie,
+    },
+    cookies: req.cookies,
+  });
+  next();
+});
 
 // Health check route
 app.get("/", (req, res) => {
@@ -50,6 +61,15 @@ app.get("/favicon.ico", (req, res) => {
 
 // Handle URL redirects at root level
 app.get("/:shortUrl", redirectToUrl);
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error("Error:", err);
+  res.status(err.status || 500).json({
+    message: err.message || "Internal Server Error",
+    stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+  });
+});
 
 app.listen(port, () => {
   console.log(

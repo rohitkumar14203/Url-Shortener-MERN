@@ -63,6 +63,9 @@ const loginUser = asyncHandler(async (req, res) => {
   if (user && (await bcrypt.compare(password, user.password))) {
     const token = generateToken(user._id);
 
+    // Debug log
+    console.log("Generated token:", token);
+
     // Set cookie with proper configuration
     res.cookie("jwt", token, {
       httpOnly: true,
@@ -71,6 +74,9 @@ const loginUser = asyncHandler(async (req, res) => {
       maxAge: 30 * 24 * 60 * 60 * 1000,
       path: "/",
     });
+
+    // Debug log
+    console.log("Set cookie headers:", res.getHeaders());
 
     // Send response with user data and token
     res.json({
