@@ -61,7 +61,6 @@ const getAllUrls = asyncHandler(async (req, res) => {
     shortUrl: visit.url.shortUrl,
     ipAddress: visit.ip,
     device: determineDevice(visit.device), // Helper function to determine device
-    browser: getBrowser(visit.device), // Helper function to get browser info
   }));
 
   res.json({
@@ -92,25 +91,6 @@ const determineDevice = (userAgent) => {
     return "Windows";
   } else if (ua.includes("linux")) {
     return "Linux";
-  }
-  return "Other";
-};
-
-// Helper function to get browser info
-const getBrowser = (userAgent) => {
-  if (!userAgent) return "Unknown";
-
-  const ua = userAgent.toLowerCase();
-  if (ua.includes("chrome")) {
-    return "Chrome";
-  } else if (ua.includes("firefox")) {
-    return "Firefox";
-  } else if (ua.includes("safari")) {
-    return "Safari";
-  } else if (ua.includes("edge")) {
-    return "Edge";
-  } else if (ua.includes("opera")) {
-    return "Opera";
   }
   return "Other";
 };

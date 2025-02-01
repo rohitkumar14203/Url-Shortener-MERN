@@ -63,7 +63,6 @@ const Analytics = () => {
         day: "numeric",
         hour: "2-digit",
         minute: "2-digit",
-        second: "2-digit",
         hour12: false,
       });
     } catch (error) {
@@ -78,8 +77,20 @@ const Analytics = () => {
   const paginatedVisits = visits.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   const getDeviceIcon = (device) => {
-    // You can add device-specific icons here
-    return "📱";
+    switch (device) {
+      case "Android":
+        return "📱";
+      case "iOS":
+        return "📱";
+      case "Windows":
+        return "💻";
+      case "Mac":
+        return "🖥️";
+      case "Linux":
+        return "🐧";
+      default:
+        return "��";
+    }
   };
 
   // If current page is greater than total pages, reset to last page
@@ -105,7 +116,6 @@ const Analytics = () => {
               <th>Short Link</th>
               <th>IP Address</th>
               <th>Device</th>
-              <th>Browser</th>
             </tr>
           </thead>
           <tbody>
@@ -113,39 +123,22 @@ const Analytics = () => {
               <tr key={visit._id} className={styles.visitRow}>
                 <td>{formatDate(visit.timestamp)}</td>
                 <td className={styles.urlCell}>
-                  <div className={styles.urlWrapper}>
-                    <a
-                      href={visit.originalUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {visit.originalUrl}
-                    </a>
-                  </div>
+                  <div className={styles.urlWrapper}>{visit.originalUrl}</div>
                 </td>
                 <td className={styles.urlCell}>
-                  <div className={styles.urlWrapper}>
-                    <a
-                      href={visit.shortUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {visit.shortUrl}
-                    </a>
-                  </div>
+                  <div className={styles.urlWrapper}>{visit.shortUrl}</div>
                 </td>
-                <td>{visit.ipAddress || "Unknown"}</td>
+                <td>{visit.ipAddress}</td>
                 <td>
                   <span className={styles.deviceInfo}>
                     {getDeviceIcon(visit.device)} {visit.device}
                   </span>
                 </td>
-                <td>{visit.browser || "Unknown"}</td>
               </tr>
             ))}
             {visits.length === 0 && (
               <tr>
-                <td colSpan="6" className={styles.noData}>
+                <td colSpan="5" className={styles.noData}>
                   No visits recorded yet
                 </td>
               </tr>
