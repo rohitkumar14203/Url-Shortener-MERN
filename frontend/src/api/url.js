@@ -4,21 +4,20 @@ const BASE_URL = `${API_BASE_URL}/api/url`;
 
 console.log("API URL:", BASE_URL); // For debugging
 
-const apiRequest = async (endpoint, options) => {
-  try {
-    // Get token before making request
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.log("No token found in localStorage");
-      window.location.href = "/login";
-      throw new Error("Please login to continue");
-    }
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    throw new Error("No authentication token found");
+  }
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+};
 
-    // Create headers with token
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    };
+const apiRequest = async (endpoint, options = {}) => {
+  try {
+    const headers = getAuthHeaders();
 
     const defaultOptions = {
       credentials: "include",
@@ -34,17 +33,15 @@ const apiRequest = async (endpoint, options) => {
       },
     };
 
-    console.log("Making request with token:", token);
-    console.log("Request URL:", `${BASE_URL}${endpoint}`);
-    console.log("Request options:", mergedOptions);
+    console.log(
+      `Making ${options.method || "GET"} request to:`,
+      `${BASE_URL}${endpoint}`
+    );
+    console.log("Request headers:", mergedOptions.headers);
 
     const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
 
-    // Log the actual request headers for debugging
-    console.log("Request headers sent:", mergedOptions.headers);
-
     if (response.status === 401) {
-      console.log("Unauthorized request - clearing token");
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       window.location.href = "/login";
@@ -60,49 +57,35 @@ const apiRequest = async (endpoint, options) => {
     return data;
   } catch (error) {
     console.error("URL API Error:", error);
+    if (error.message.includes("No authentication token found")) {
+      window.location.href = "/login";
+    }
     throw error;
   }
 };
 
 export const getAllUrls = async () => {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    throw new Error("No authentication token found");
-  }
+  return apiRequest("/all", { method: "GET" });
+};
 
-  return apiRequest("/all", {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+export const getUrlStats = async (urlId) => {
+  return apiRequest(`/${urlId}/stats`, { method: "GET" });
 };
 
 export const createShortUrl = async (urlData) => {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    throw new Error("No authentication token found");
-  }
-
   return apiRequest("/shorten", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    body: JSON.stringify(urlData),
+  });
+};
+
+export const updateUrl = async (urlId, urlData) => {
+  return apiRequest(`/${urlId}`, {
+    method: "PUT",
     body: JSON.stringify(urlData),
   });
 };
 
 export const deleteUrl = async (urlId) => {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    throw new Error("No authentication token found");
-  }
-
-  return apiRequest(`/${urlId}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  return apiRequest(`/${urlId}`, { method: "DELETE" });
 };

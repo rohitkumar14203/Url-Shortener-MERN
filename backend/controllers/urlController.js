@@ -1,5 +1,20 @@
 import asyncHandler from "../middleware/asyncHandler.js";
 import URL from "../modal/urlModal.js";
+import Visit from "../modal/visitModal.js";
+
+// Debug middleware for URL routes
+const debugRequest = (req, res, next) => {
+  console.log("URL Request:", {
+    method: req.method,
+    path: req.path,
+    headers: {
+      authorization: req.headers.authorization,
+      cookie: req.headers.cookie,
+    },
+    user: req.user?._id,
+  });
+  next();
+};
 
 // @desc    Create a short URL
 // @route   POST /api/url/shorten
