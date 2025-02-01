@@ -22,6 +22,7 @@ const visitSchema = new mongoose.Schema(
     ip: {
       type: String,
       default: "Unknown",
+      set: (ip) => ip.replace(/^.*:/, ''), // Remove IPv6 prefix if present
     },
   },
   {

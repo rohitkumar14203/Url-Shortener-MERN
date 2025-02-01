@@ -76,23 +76,6 @@ const Analytics = () => {
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedVisits = visits.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-  const getDeviceIcon = (device) => {
-    switch (device) {
-      case "Android":
-        return "📱";
-      case "iOS":
-        return "📱";
-      case "Windows":
-        return "💻";
-      case "Mac":
-        return "🖥️";
-      case "Linux":
-        return "🐧";
-      default:
-        return "��";
-    }
-  };
-
   // If current page is greater than total pages, reset to last page
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -134,9 +117,7 @@ const Analytics = () => {
                 </td>
                 <td>{visit.ipAddress}</td>
                 <td>
-                  <span className={styles.deviceInfo}>
-                    {getDeviceIcon(visit.device)} {visit.device}
-                  </span>
+                  <span className={styles.deviceInfo}>{visit.device}</span>
                 </td>
               </tr>
             ))}

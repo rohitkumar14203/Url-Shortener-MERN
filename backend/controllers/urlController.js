@@ -51,16 +51,16 @@ const getAllUrls = asyncHandler(async (req, res) => {
     url: { $in: urls.map((url) => url._id) },
   })
     .sort({ timestamp: -1 })
-    .populate("url", "originalUrl shortUrl"); // Populate URL details
+    .populate("url", "originalUrl shortUrl");
 
-  // Format visit data with URL details
+  // Format visit data with URL details and proper IP
   const formattedVisits = visits.map((visit) => ({
     _id: visit._id,
     timestamp: visit.timestamp,
     originalUrl: visit.url.originalUrl,
     shortUrl: visit.url.shortUrl,
-    ipAddress: visit.ip,
-    device: determineDevice(visit.device), // Helper function to determine device
+    ipAddress: visit.ip || "Unknown",
+    device: determineDevice(visit.device),
   }));
 
   res.json({
@@ -146,6 +146,28 @@ const getUrlStats = asyncHandler(async (req, res) => {
   });
 });
 
+// Helper function to get client IP
+const getClientIP = (req) => {
+  // Try to get IP from various headers
+  const forwardedFor = req.headers["x-forwarded-for"];
+  const realIP = req.headers["x-real-ip"];
+  const cfConnectingIP = req.headers["cf-connecting-ip"];
+  const trueClientIP = req.headers["true-client-ip"];
+
+  if (forwardedFor) {
+    // x-forwarded-for can contain multiple IPs, get the first one
+    const ips = forwardedFor.split(",");
+    return ips[0].trim();
+  }
+
+  if (trueClientIP) return trueClientIP;
+  if (cfConnectingIP) return cfConnectingIP;
+  if (realIP) return realIP;
+
+  // Fallback to remote address
+  return req.connection.remoteAddress?.replace(/^.*:/, "") || "Unknown";
+};
+
 // @desc    Record a visit to a URL
 // @route   POST /api/url/visit/:shortUrl
 // @access  Public
@@ -157,11 +179,15 @@ const recordVisit = asyncHandler(async (req, res) => {
     throw new Error("URL not found");
   }
 
-  // Create visit record
+  // Get the actual client IP
+  const clientIP = getClientIP(req);
+  console.log("Client IP:", clientIP);
+
+  // Create visit record with actual IP
   await Visit.create({
     url: url._id,
     device: req.headers["user-agent"] || "Unknown",
-    ip: req.ip,
+    ip: clientIP,
   });
 
   // Increment click count
