@@ -32,7 +32,8 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error("Error fetching URLs:", error);
-      if (error.message.includes("Please login") || error.message.includes("unauthorized")) {
+      if (error.message.includes("No authentication token found") || 
+          error.message.includes("unauthorized")) {
         navigate("/login");
       } else {
         toast.error(error.message || "Failed to fetch links");
@@ -80,7 +81,19 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchLinks();
+    let mounted = true;
+
+    const fetchData = async () => {
+      if (mounted) {
+        await fetchLinks();
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      mounted = false;
+    };
   }, [fetchLinks]);
 
   // Get the maximum value for scaling the bars
