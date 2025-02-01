@@ -43,12 +43,14 @@ const urlSchema = new mongoose.Schema({
   originalUrl: {
     type: String,
     required: true,
+    validate: {
+      validator: function (v) {
+        return /^(ftp|http|https):\/\/[^ "]+$/.test(v); // Validate URL format
+      },
+      message: (props) => `${props.value} is not a valid URL!`,
+    },
   },
   shortUrl: {
-    type: String,
-    unique: true,
-  },
-  fullShortUrl: {
     type: String,
     unique: true,
   },
@@ -73,30 +75,21 @@ const urlSchema = new mongoose.Schema({
   remarks: {
     type: String,
   },
-}, {
-  timestamps: true,
 });
 
 // Create indexes for efficient querying
 urlSchema.index({ status: 1 });
 urlSchema.index({ expirationDate: 1 });
 
-// Pre-save middleware to ensure URLs are properly formatted
-urlSchema.pre('save', function(next) {
-  // If no shortUrl is set, generate one
+// Pre-save middleware to generate the full short URL
+urlSchema.pre("save", function (next) {
   if (!this.shortUrl) {
-    this.shortUrl = Math.random().toString(36).substring(2, 8);
-  }
-
-  // Create the full short URL if not set
-  if (!this.fullShortUrl) {
-    const baseUrl = process.env.API_BASE_URL || 'https://url-shortener-mern.onrender.com';
-    this.fullShortUrl = `${baseUrl}/${this.shortUrl}`;
-  }
-
-  // Ensure original URL has protocol
-  if (!this.originalUrl.startsWith('http://') && !this.originalUrl.startsWith('https://')) {
-    this.originalUrl = 'https://' + this.originalUrl;
+    const hostname = process.env.HOSTNAME || "localhost:5000";
+    const uniqueId = shortid
+      .generate()
+      .slice(0, 6)
+      .replace(/[@$]/g, (char) => (char === "@" ? "X" : "Y"));
+    this.shortUrl = `https://${hostname}/${uniqueId}`;
   }
 
   if (this.expirationDate && this.expirationDate < new Date()) {

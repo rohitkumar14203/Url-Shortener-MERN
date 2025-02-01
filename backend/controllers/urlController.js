@@ -2,6 +2,20 @@ import asyncHandler from "../middleware/asyncHandler.js";
 import URL from "../modal/urlModal.js";
 import Visit from "../modal/visitModal.js";
 
+// Debug middleware for URL routes
+const debugRequest = (req, res, next) => {
+  console.log("URL Request:", {
+    method: req.method,
+    path: req.path,
+    headers: {
+      authorization: req.headers.authorization,
+      cookie: req.headers.cookie,
+    },
+    user: req.user?._id,
+  });
+  next();
+};
+
 // @desc    Create a short URL
 // @route   POST /api/url/shorten
 // @access  Private
@@ -13,29 +27,16 @@ const createShortUrl = asyncHandler(async (req, res) => {
     throw new Error("Original URL is required");
   }
 
-  // Generate a unique short URL code
-  const shortUrlCode = Math.random().toString(36).substring(2, 8);
-
-  // Create the full short URL
-  const fullShortUrl = `${
-    process.env.HOSTNAME || "https://url-shortener-mern.onrender.com"
-  }/${shortUrlCode}`;
-
   const url = await URL.create({
     user: req.user._id,
     originalUrl,
-    shortUrl: shortUrlCode, // Store just the code
-    fullShortUrl, // Store the full URL
     expirationDate: expirationDate || null,
     remarks: remarks || "",
   });
 
   res.status(201).json({
     success: true,
-    data: {
-      ...url.toObject(),
-      shortUrl: fullShortUrl, // Return the full URL
-    },
+    data: url,
   });
 });
 
@@ -121,24 +122,21 @@ const recordVisit = asyncHandler(async (req, res) => {
     throw new Error("URL not found");
   }
 
-  // Create visit record with more details
+  // Create visit record
   await Visit.create({
     url: url._id,
     device: req.headers["user-agent"] || "Unknown",
-    ip: req.ip || req.headers["x-forwarded-for"] || "Unknown",
-    browser: req.headers["user-agent"] || "Unknown",
+    ip: req.ip,
   });
 
   // Increment click count
   url.clicks += 1;
   await url.save();
 
-  // Return the original URL for redirection
   res.json({
     success: true,
     data: {
       originalUrl: url.originalUrl,
-      shortUrl: url.shortUrl,
     },
   });
 });

@@ -7,8 +7,8 @@ import connectDB from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
 import urlRoutes from "./routes/urlRoutes.js";
 import cors from "cors";
-import URL from "./modal/urlModal.js";
-import Visit from "./modal/visitModal.js";
+import URL from "./models/url.js";
+import Visit from "./models/visit.js";
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -66,31 +66,30 @@ app.get("/favicon.ico", (req, res) => {
 // Handle URL redirects
 app.get("/:shortUrl", async (req, res) => {
   try {
-    // Look for URL by the short code
-    const url = await URL.findOne({ shortUrl: req.params.shortUrl });
+    const url = await URL.findOne({ 
+      shortUrl: `https://${process.env.HOSTNAME}/${req.params.shortUrl}` 
+    });
 
     if (!url) {
-      console.log("URL not found:", req.params.shortUrl);
-      return res.status(404).json({ message: "URL not found or invalid" });
+      return res.status(404).json({ message: "URL not found" });
     }
 
-    // Record the visit
+    // Create visit record
     await Visit.create({
       url: url._id,
       device: req.headers["user-agent"] || "Unknown",
-      ip: req.ip || req.headers["x-forwarded-for"] || "Unknown",
-      browser: req.headers["user-agent"] || "Unknown",
+      ip: req.ip,
     });
 
     // Increment click count
     url.clicks += 1;
     await url.save();
 
-    console.log("Redirecting to:", url.originalUrl);
+    // Redirect to original URL
     res.redirect(url.originalUrl);
   } catch (error) {
     console.error("Redirect error:", error);
-    res.status(404).json({ message: "URL not found or invalid" });
+    res.status(500).json({ message: "Server error during redirect" });
   }
 });
 
