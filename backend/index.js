@@ -6,7 +6,6 @@ import cookieParser from "cookie-parser";
 import connectDB from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
 import urlRoutes from "./routes/urlRoutes.js";
-import { redirectToUrl } from "./controllers/urlController.js";
 import cors from "cors";
 
 const app = express();
@@ -57,13 +56,37 @@ app.get("/", (req, res) => {
 app.use("/api/users", userRoutes);
 app.use("/api/url", urlRoutes);
 
-// Handle favicon requests - MOVED BEFORE shortUrl handler
+// Handle favicon requests
 app.get("/favicon.ico", (req, res) => {
   res.status(204).end();
 });
 
-// Handle URL redirects at root level
-app.get("/:shortUrl", redirectToUrl);
+// Handle URL redirects
+app.get("/:shortUrl", async (req, res) => {
+  try {
+    const response = await fetch(
+      `${process.env.API_BASE_URL || "http://localhost:5000"}/api/url/visit/${
+        req.params.shortUrl
+      }`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to record visit");
+    }
+
+    res.redirect(data.data.originalUrl);
+  } catch (error) {
+    res.status(404).json({ message: "URL not found or invalid" });
+  }
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
