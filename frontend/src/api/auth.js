@@ -19,6 +19,7 @@ const apiRequest = async (endpoint, options = {}) => {
         ...defaultOptions.headers,
         ...(options.headers || {}),
       },
+      credentials: "include",
     };
 
     console.log("Request URL:", `${BASE_URL}${endpoint}`);
@@ -55,6 +56,7 @@ export const loginUser = async (credentials) => {
   try {
     const data = await apiRequest("/login", {
       method: "POST",
+      credentials: "include",
       body: JSON.stringify(credentials),
     });
     return data;

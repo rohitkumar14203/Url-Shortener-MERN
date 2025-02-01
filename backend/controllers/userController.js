@@ -74,14 +74,11 @@ const loginUser = asyncHandler(async (req, res) => {
         sameSite: "none",
         path: "/",
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        domain:
-          process.env.NODE_ENV === "production" ? ".onrender.com" : "localhost",
+        domain: "onrender.com", // Remove the dot prefix
       };
 
       // Set the cookie
       res.cookie("jwt", token, cookieOptions);
-
-      // Log cookie being set
       console.log("Setting cookie with options:", cookieOptions);
 
       return res.json({
