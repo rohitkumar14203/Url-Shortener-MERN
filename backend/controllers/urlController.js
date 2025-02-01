@@ -154,17 +154,23 @@ const recordVisit = asyncHandler(async (req, res) => {
     throw new Error("URL not found");
   }
 
-  const ip =
-    req.headers["x-forwarded-for"]?.split(",")[0] ||
-    req.headers["x-real-ip"] ||
-    req.headers["cf-connecting-ip"] ||
-    req.connection.remoteAddress ||
-    req.ip;
+  // Get real IP by checking multiple headers in order of reliability
+  let realIP =
+    req.headers["x-real-ip"] || // Nginx
+    req.headers["x-client-ip"] || // Standard client IP header
+    req.headers["cf-connecting-ip"] || // Cloudflare
+    req.headers["x-forwarded-for"]?.split(",")[0] || // Proxy forwarded IP
+    req.socket.remoteAddress?.replace(/^.*:/, "") || // Socket IP (cleaned)
+    req.ip?.replace(/^.*:/, "") || // Express IP (cleaned)
+    "Unknown";
+
+  // Remove any IPv6 prefix if present
+  realIP = realIP.replace(/^::ffff:/, "");
 
   await Visit.create({
     url: url._id,
     device: req.headers["user-agent"] || "Unknown",
-    ip: ip || "Unknown",
+    ip: realIP,
   });
 
   url.clicks += 1;
