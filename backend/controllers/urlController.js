@@ -43,13 +43,48 @@ const createShortUrl = asyncHandler(async (req, res) => {
 // @desc    Get all URLs for user
 // @route   GET /api/url/all
 // @access  Private
+// const getAllUrls = asyncHandler(async (req, res) => {
+//   console.log("Getting URLs for user:", req.user._id);
+
+//   const urls = await URL.find({ user: req.user._id }).sort({ createdAt: -1 });
+//   const visits = new Visit({
+//     url: url._id,
+//     ip:
+//       req.headers["x-forwarded-for"]?.split(",")[0] ||
+//       req.connection.remoteAddress ||
+//       "Unknown",
+//     userAgent: req.headers["user-agent"] || "Unknown",
+//   })
+//     .sort({ timestamp: -1 })
+//     .populate("url", "originalUrl shortUrl");
+//   await visits.save();
+
+//   // Format visit data with URL details and proper IP
+//   const formattedVisits = visits.map((visit) => ({
+//     _id: visit._id,
+//     timestamp: visit.timestamp,
+//     originalUrl: visit.url.originalUrl,
+//     shortUrl: visit.url.shortUrl,
+//     ipAddress: visit.ip || "Unknown",
+//     device: determineDevice(visit.device),
+//   }));
+
+//   res.json({
+//     success: true,
+//     data: {
+//       urls,
+//       visits: formattedVisits,
+//     },
+//   });
+// });
+
 const getAllUrls = asyncHandler(async (req, res) => {
   console.log("Getting URLs for user:", req.user._id);
 
   const urls = await URL.find({ user: req.user._id }).sort({ createdAt: -1 });
-  const visits = await Visit.find({
-    url: { $in: urls.map((url) => url._id) },
-  })
+
+  // Fetch visit records for these URLs
+  const visits = await Visit.find({ url: { $in: urls.map((url) => url._id) } })
     .sort({ timestamp: -1 })
     .populate("url", "originalUrl shortUrl");
 
