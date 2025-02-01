@@ -123,10 +123,14 @@ const Analytics = () => {
               <tr key={visit._id} className={styles.visitRow}>
                 <td>{formatDate(visit.timestamp)}</td>
                 <td className={styles.urlCell}>
-                  <div className={styles.urlWrapper}>{visit.originalUrl}</div>
+                  <div className={styles.urlWrapper}>
+                    <span>{visit.originalUrl}</span>
+                  </div>
                 </td>
                 <td className={styles.urlCell}>
-                  <div className={styles.urlWrapper}>{visit.shortUrl}</div>
+                  <div className={styles.urlWrapper}>
+                    <span>{visit.shortUrl}</span>
+                  </div>
                 </td>
                 <td>{visit.ipAddress}</td>
                 <td>
