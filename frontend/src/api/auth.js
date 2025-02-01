@@ -26,15 +26,15 @@ const apiRequest = async (endpoint, options) => {
       },
     };
 
-    console.log('Making request to:', `${BASE_URL}${endpoint}`); // Debug log
-    console.log('With options:', mergedOptions); // Debug log
+    console.log("Making request to:", `${BASE_URL}${endpoint}`); // Debug log
+    console.log("With options:", mergedOptions); // Debug log
 
     const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
     const data = await response.json();
 
     // Debug logs
-    console.log('Response status:', response.status);
-    console.log('Response data:', data);
+    console.log("Response status:", response.status);
+    console.log("Response data:", data);
 
     if (!response.ok) {
       throw new Error(data.message || "Server error occurred");
@@ -47,7 +47,7 @@ const apiRequest = async (endpoint, options) => {
 
     return data;
   } catch (error) {
-    console.error('API Error:', error); // Debug log
+    console.error("API Error:", error); // Debug log
     throw new Error(error.message || "Server error occurred");
   }
 };
@@ -70,7 +70,7 @@ export const logoutUser = async () => {
     await apiRequest("/logout", { method: "POST" });
     localStorage.removeItem("token"); // Clear token on logout
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error("Logout error:", error);
     throw error;
   }
 };

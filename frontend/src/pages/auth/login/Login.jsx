@@ -10,8 +10,8 @@ import { loginUser } from "../../../api/auth";
 import { useAuth } from "../../../context/AuthContext";
 
 const Login = () => {
-  const navigate = useNavigate();
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,14 +24,14 @@ const Login = () => {
     }
 
     try {
-      const userData = await loginUser({ email, password });
-      login(userData);
-
-      toast.success("Login Successfully");
+      const data = await login({
+        email: email,
+        password: password,
+      });
+      console.log("Login successful:", data);
       navigate("/dashboard");
-      setEmail("");
-      setPassword("");
     } catch (error) {
+      console.error("Login failed:", error);
       toast.error(error.message);
     }
   };
@@ -89,7 +89,7 @@ const Login = () => {
                 Login
               </button>
               <p className={styles.signup}>
-                Don’t have an account? <Link to="/register">SignUp</Link>
+                Don't have an account? <Link to="/register">SignUp</Link>
               </p>
             </form>
           </div>

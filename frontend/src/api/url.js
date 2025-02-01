@@ -10,9 +10,14 @@ const apiRequest = async (endpoint, options) => {
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        Accept: "application/json",
       },
     };
+
+    // Get token from localStorage
+    const token = localStorage.getItem("token");
+    if (token) {
+      defaultOptions.headers.Authorization = `Bearer ${token}`;
+    }
 
     const mergedOptions = {
       ...defaultOptions,
@@ -23,11 +28,14 @@ const apiRequest = async (endpoint, options) => {
       },
     };
 
-    const fullUrl = `${BASE_URL}${endpoint}`;
-    console.log("Making request to:", fullUrl); // For debugging
+    console.log("Making URL request to:", `${BASE_URL}${endpoint}`);
+    console.log("With options:", mergedOptions);
 
-    const response = await fetch(fullUrl, mergedOptions);
+    const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
     const data = await response.json();
+
+    console.log("URL Response status:", response.status);
+    console.log("URL Response data:", data);
 
     if (!response.ok) {
       throw new Error(data.message || "Server error occurred");
@@ -35,7 +43,7 @@ const apiRequest = async (endpoint, options) => {
 
     return data;
   } catch (error) {
-    console.error("API Error:", error); // For debugging
+    console.error("URL API Error:", error);
     throw error;
   }
 };
@@ -43,19 +51,15 @@ const apiRequest = async (endpoint, options) => {
 export const createShortUrl = (urlData) =>
   apiRequest("/shorten", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
     body: JSON.stringify(urlData),
   });
 
 export const getAllUrls = () =>
   apiRequest("/all", {
     method: "GET",
-    credentials: "include",
   });
 
 export const deleteUrl = (urlId) =>
   apiRequest(`/${urlId}`, {
     method: "DELETE",
-    credentials: "include",
   });

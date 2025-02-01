@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { getUser } from "../api/auth";
+import { loginUser, registerUser, logoutUser } from "../api/auth";
 import { toast } from "react-toastify";
 
 const AuthContext = createContext();
@@ -9,38 +9,68 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const userData = await getUser();
-        if (userData) {
-          setUser(userData);
-        }
-      } catch (error) {
-        toast.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initializeAuth();
+    // Check for token and user data in localStorage on mount
+    const token = localStorage.getItem("token");
+    const savedUser = localStorage.getItem("user");
+    if (token && savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+    setLoading(false);
   }, []);
 
-  const login = (userData) => {
-    setUser(userData);
-    setLoading(false);
+  const login = async (credentials) => {
+    try {
+      const data = await loginUser(credentials);
+      setUser(data);
+      // Save user data in localStorage
+      localStorage.setItem("user", JSON.stringify(data));
+      return data;
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    setLoading(false);
+  const register = async (userData) => {
+    try {
+      const data = await registerUser(userData);
+      setUser(data);
+      // Save user data in localStorage
+      localStorage.setItem("user", JSON.stringify(data));
+      return data;
+    } catch (error) {
+      console.error("Register error:", error);
+      throw error;
+    }
   };
+
+  const logout = async () => {
+    try {
+      await logoutUser();
+      setUser(null);
+      // Clear localStorage
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+    } catch (error) {
+      console.error("Logout error:", error);
+      throw error;
+    }
+  };
+
   const updateUserContext = (userData) => {
     setUser(userData);
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, logout, updateUserContext }}
+      value={{
+        user,
+        login,
+        logout,
+        register,
+        loading,
+        updateUserContext,
+      }}
     >
       {children}
     </AuthContext.Provider>
