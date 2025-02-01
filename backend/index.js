@@ -7,8 +7,8 @@ import connectDB from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
 import urlRoutes from "./routes/urlRoutes.js";
 import cors from "cors";
-import URL from "./models/urlModel.js";
-import Visit from "./models/visitModel.js";
+import URL from "./modal/urlModal.js";
+import Visit from "./modal/visitModal.js";
 
 const app = express();
 const port = process.env.PORT || 5000;
