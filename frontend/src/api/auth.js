@@ -19,27 +19,29 @@ const apiRequest = async (endpoint, options = {}) => {
         ...defaultOptions.headers,
         ...(options.headers || {}),
       },
-      credentials: "include",
     };
 
-    console.log("Request URL:", `${BASE_URL}${endpoint}`);
-    console.log("Request Options:", mergedOptions);
+    const url = `${BASE_URL}${endpoint}`;
+    console.log("Making request to:", url);
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
-
-    // Log response headers for debugging
-    console.log("Response Headers:", [...response.headers.entries()]);
-    console.log("Response Status:", response.status);
-
-    const data = await response.json();
+    const response = await fetch(url, mergedOptions);
+    console.log("Response status:", response.status);
+    console.log("Response headers:", [...response.headers.entries()]);
 
     if (!response.ok) {
-      throw new Error(data.message || "Server error occurred");
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Server error occurred");
     }
 
+    const data = await response.json();
     return data;
   } catch (error) {
     console.error("API Error:", error);
+    if (error.name === "TypeError" && error.message === "Failed to fetch") {
+      throw new Error(
+        "Unable to connect to server. Please check your internet connection."
+      );
+    }
     throw error;
   }
 };
