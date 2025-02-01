@@ -3,7 +3,15 @@ import User from "../modal/userModal.js";
 import asyncHandler from "./asyncHandler.js";
 
 const authenticate = asyncHandler(async (req, res, next) => {
-  let token = req.cookies.jwt;
+  let token;
+
+  // Check for token in cookies
+  token = req.cookies.jwt;
+
+  // Also check Authorization header as fallback
+  if (!token && req.headers.authorization?.startsWith("Bearer")) {
+    token = req.headers.authorization.split(" ")[1];
+  }
 
   if (!token) {
     res.status(401);
@@ -22,7 +30,6 @@ const authenticate = asyncHandler(async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
-    console.error("Auth Error:", error);
     res.status(401);
     throw new Error("Not authorized, token failed");
   }

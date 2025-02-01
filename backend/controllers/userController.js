@@ -61,36 +61,30 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  try {
-    const user = await User.findOne({ email });
+  const user = await User.findOne({ email });
 
-    if (user && (await bcrypt.compare(password, user.password))) {
-      const token = generateToken(user._id);
+  if (user && (await bcrypt.compare(password, user.password))) {
+    const token = generateToken(user._id);
 
-      // Set cookie using setHeader
-      res.setHeader(
-        "Set-Cookie",
-        `jwt=${token}; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=${
-          30 * 24 * 60 * 60
-        }`
-      );
-
-      return res.json({
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        phoneNumber: user.phoneNumber,
-        token: token,
-      });
-    } else {
-      res.status(401);
-      throw new Error("Invalid email or password");
-    }
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({
-      message: error.message || "An error occurred during login",
+    // Set cookie with proper configuration
+    res.cookie("jwt", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV !== "development", // true in production
+      sameSite: "None", // Required for cross-site cookies
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      path: "/",
     });
+
+    res.json({
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      token, // Include token in response for flexibility
+    });
+  } else {
+    res.status(401);
+    throw new Error("Invalid email or password");
   }
 });
 

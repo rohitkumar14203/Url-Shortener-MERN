@@ -5,7 +5,7 @@ const BASE_URL = `${API_BASE_URL}/api/users`;
 const apiRequest = async (endpoint, options) => {
   try {
     const defaultOptions = {
-      credentials: "include",
+      credentials: "include", // Important for cookies
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -30,7 +30,6 @@ const apiRequest = async (endpoint, options) => {
 
     return data;
   } catch (error) {
-    console.error("API Error:", error);
     throw new Error(error.message || "Server error occurred");
   }
 };

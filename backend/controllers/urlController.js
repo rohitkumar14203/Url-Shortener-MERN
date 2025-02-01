@@ -7,11 +7,7 @@ import URL from "../modal/urlModal.js";
 const shortenUrl = asyncHandler(async (req, res) => {
   const { originalUrl, expirationDate, remarks } = req.body;
 
-  if (!req.user) {
-    res.status(401);
-    throw new Error("User authentication required");
-  }
-
+  // Basic validation
   if (!originalUrl) {
     res.status(400);
     throw new Error("Original URL is required");
@@ -19,7 +15,7 @@ const shortenUrl = asyncHandler(async (req, res) => {
 
   // Create URL document with user reference
   const urlDoc = new URL({
-    user: req.user._id,
+    user: req.user._id, // Add user reference
     originalUrl,
     expirationDate: expirationDate || null,
     remarks: remarks || "",
@@ -47,11 +43,6 @@ const shortenUrl = asyncHandler(async (req, res) => {
 // @route   GET /api/url/all
 // @access  Private
 const getAllUrls = asyncHandler(async (req, res) => {
-  if (!req.user) {
-    res.status(401);
-    throw new Error("User authentication required");
-  }
-
   // Get all URLs for the current user
   const urls = await URL.find({ user: req.user._id }).sort({ createdAt: -1 });
 

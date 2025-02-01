@@ -11,12 +11,10 @@ import authenticate from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 // Protected routes (require authentication)
-router.use(authenticate); // Apply authentication middleware to all URL routes
-
-router.post("/shorten", shortenUrl);
-router.get("/all", getAllUrls);
-router.put("/:id", updateUrl);
-router.delete("/:id", deleteUrl);
-router.get("/:shortUrl/stats", getUrlStats);
+router.post("/shorten", authenticate, shortenUrl);
+router.get("/all", authenticate, getAllUrls);
+router.put("/:id", authenticate, updateUrl);
+router.delete("/:id", authenticate, deleteUrl);
+router.get("/:shortUrl/stats", authenticate, getUrlStats);
 
 export default router;
