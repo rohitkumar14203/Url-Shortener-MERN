@@ -79,8 +79,6 @@ const createShortUrl = asyncHandler(async (req, res) => {
 // });
 
 const getAllUrls = asyncHandler(async (req, res) => {
-  console.log("Getting URLs for user:", req.user._id);
-
   const urls = await URL.find({ user: req.user._id }).sort({ createdAt: -1 });
 
   // Fetch visit records for these URLs
@@ -107,26 +105,71 @@ const getAllUrls = asyncHandler(async (req, res) => {
   });
 });
 
+// Helper function to get client IP
+const getClientIP = (req) => {
+  // Try Cloudflare headers first
+  const cfIP =
+    req.headers["cf-connecting-ip"] || req.headers["cf-connecting-ipv6"];
+  if (cfIP) {
+    return cfIP;
+  }
+
+  // Try x-forwarded-for
+  const forwardedFor = req.headers["x-forwarded-for"];
+  if (forwardedFor) {
+    const ips = forwardedFor.split(",");
+    const clientIP = ips[0].trim();
+    return clientIP;
+  }
+
+  // Try other headers
+  const alternativeIPs = [
+    req.headers["true-client-ip"],
+    req.headers["x-real-ip"],
+    req.headers["x-client-ip"],
+    req.connection?.remoteAddress,
+    req.socket?.remoteAddress,
+    req.connection?.socket?.remoteAddress,
+    "Unknown",
+  ];
+
+  const detectedIP = alternativeIPs.find(
+    (ip) => ip && ip !== "1" && ip !== "unknown"
+  );
+  return detectedIP;
+};
+
 // Helper function to determine device type
 const determineDevice = (userAgent) => {
   if (!userAgent) return "Unknown";
 
   const ua = userAgent.toLowerCase();
+
+  // Mobile Devices
+  if (ua.includes("iphone")) return "iPhone";
+  if (ua.includes("ipad")) return "iPad";
   if (ua.includes("android")) {
-    return "Android";
-  } else if (
-    ua.includes("iphone") ||
-    ua.includes("ipad") ||
-    ua.includes("ios")
-  ) {
-    return "iOS";
-  } else if (ua.includes("macintosh") || ua.includes("mac os")) {
-    return "Mac";
-  } else if (ua.includes("windows")) {
-    return "Windows";
-  } else if (ua.includes("linux")) {
+    if (ua.includes("mobile")) return "Android Phone";
+    return "Android Tablet";
+  }
+
+  // Desktop OS
+  if (ua.includes("windows")) {
+    if (ua.includes("windows phone")) return "Windows Phone";
+    return "Windows PC";
+  }
+  if (ua.includes("macintosh") || ua.includes("mac os")) return "Mac";
+  if (ua.includes("linux")) {
+    if (ua.includes("android")) return "Android Device";
     return "Linux";
   }
+  if (ua.includes("cros")) return "ChromeOS";
+
+  // Game Consoles
+  if (ua.includes("playstation")) return "PlayStation";
+  if (ua.includes("xbox")) return "Xbox";
+  if (ua.includes("nintendo")) return "Nintendo";
+
   return "Other";
 };
 
@@ -181,42 +224,6 @@ const getUrlStats = asyncHandler(async (req, res) => {
   });
 });
 
-// Helper function to get client IP
-const getClientIP = (req) => {
-  // For Cloudflare
-  if (req.headers["cf-connecting-ip"]) {
-    return req.headers["cf-connecting-ip"];
-  }
-
-  // For x-forwarded-for
-  if (req.headers["x-forwarded-for"]) {
-    // Get the first IP in the list (client's original IP)
-    const ips = req.headers["x-forwarded-for"].split(",");
-    // Clean and validate the IP
-    const clientIP = ips[0].trim();
-    if (clientIP && clientIP !== "1") {
-      return clientIP;
-    }
-  }
-
-  // Try true-client-ip header
-  if (req.headers["true-client-ip"]) {
-    return req.headers["true-client-ip"];
-  }
-
-  // Try x-real-ip header
-  if (req.headers["x-real-ip"]) {
-    return req.headers["x-real-ip"];
-  }
-
-  // Last resort: remote address
-  if (req.socket && req.socket.remoteAddress) {
-    return req.socket.remoteAddress.replace(/^.*:/, "");
-  }
-
-  return "Unknown";
-};
-
 // @desc    Record a visit to a URL
 // @route   POST /api/url/visit/:shortUrl
 // @access  Public
@@ -228,23 +235,14 @@ const recordVisit = asyncHandler(async (req, res) => {
     throw new Error("URL not found");
   }
 
-  // Get the actual client IP
+  // Get the actual client IP and device type
   const clientIP = getClientIP(req);
+  const deviceType = determineDevice(req.headers["user-agent"]);
 
-  // Debug logging
-  console.log("IP Detection Debug:", {
-    cfConnecting: req.headers["cf-connecting-ip"],
-    xForwardedFor: req.headers["x-forwarded-for"],
-    trueClientIp: req.headers["true-client-ip"],
-    xRealIp: req.headers["x-real-ip"],
-    remoteAddr: req.socket?.remoteAddress,
-    finalIP: clientIP,
-  });
-
-  // Create visit record with actual IP
+  // Create visit record
   await Visit.create({
     url: url._id,
-    device: req.headers["user-agent"] || "Unknown",
+    device: deviceType,
     ip: clientIP,
   });
 
