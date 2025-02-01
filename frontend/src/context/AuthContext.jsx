@@ -34,13 +34,19 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const data = await loginUser(credentials);
-      setUser(data);
-      setToken(data.token);
-      localStorage.setItem("user", JSON.stringify(data));
-      localStorage.setItem("token", data.token);
-      toast.success("Login successful");
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data));
+        setToken(data.token);
+        setUser(data);
+        console.log("Token stored after login:", data.token);
+        toast.success("Login successful");
+      } else {
+        throw new Error("No token received from server");
+      }
       return data;
     } catch (error) {
+      console.error("Login error:", error);
       toast.error(error.message);
       throw error;
     }
@@ -61,7 +67,10 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await logoutUser();
+      const token = localStorage.getItem("token");
+      if (token) {
+        await logoutUser();
+      }
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
@@ -69,6 +78,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem("user");
       setToken(null);
       setUser(null);
+      console.log("Token cleared after logout");
     }
   };
 

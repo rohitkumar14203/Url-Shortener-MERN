@@ -4,6 +4,7 @@ import styles from "./Dashboard.module.css";
 import { API_BASE_URL } from "../../config/config";
 import { getAllUrls } from "../../api/url";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const Dashboard = () => {
   const [links, setLinks] = useState([]);
@@ -16,16 +17,25 @@ const Dashboard = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
+        console.log("No token found - redirecting to login");
         navigate("/login");
         return;
       }
-      const data = await getAllUrls();
-      setLinks(data.data.urls);
-      processClickData(data.data.urls, data.data.visits);
+
+      console.log("Fetching URLs with token:", token);
+      const response = await getAllUrls();
+      
+      if (response.data) {
+        const { urls, visits } = response.data;
+        setLinks(urls);
+        processClickData(urls, visits);
+      }
     } catch (error) {
       console.error("Error fetching URLs:", error);
-      if (error.message.includes("Please login")) {
+      if (error.message.includes("Please login") || error.message.includes("unauthorized")) {
         navigate("/login");
+      } else {
+        toast.error(error.message || "Failed to fetch links");
       }
     }
   }, [navigate]);

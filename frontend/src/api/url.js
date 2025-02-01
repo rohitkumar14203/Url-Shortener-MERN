@@ -6,8 +6,10 @@ console.log("API URL:", BASE_URL); // For debugging
 
 const apiRequest = async (endpoint, options) => {
   try {
+    // Get token before making request
     const token = localStorage.getItem("token");
     if (!token) {
+      console.log("No token found in localStorage");
       window.location.href = "/login";
       throw new Error("Please login to continue");
     }
@@ -16,7 +18,7 @@ const apiRequest = async (endpoint, options) => {
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`, // Always include token in headers
+        Authorization: `Bearer ${token}`,
       },
     };
 
@@ -29,11 +31,13 @@ const apiRequest = async (endpoint, options) => {
       },
     };
 
-    console.log("Making URL request with options:", mergedOptions); // Debug log
+    console.log("Making request with token:", token);
+    console.log("Request options:", mergedOptions);
 
     const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
 
     if (response.status === 401) {
+      console.log("Unauthorized request - clearing token");
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       window.location.href = "/login";
@@ -53,18 +57,24 @@ const apiRequest = async (endpoint, options) => {
   }
 };
 
-export const createShortUrl = (urlData) =>
-  apiRequest("/shorten", {
+export const getAllUrls = async () => {
+  const data = await apiRequest("/all", {
+    method: "GET",
+  });
+  return data;
+};
+
+export const createShortUrl = async (urlData) => {
+  const data = await apiRequest("/shorten", {
     method: "POST",
     body: JSON.stringify(urlData),
   });
+  return data;
+};
 
-export const getAllUrls = () =>
-  apiRequest("/all", {
-    method: "GET",
-  });
-
-export const deleteUrl = (urlId) =>
-  apiRequest(`/${urlId}`, {
+export const deleteUrl = async (urlId) => {
+  const data = await apiRequest(`/${urlId}`, {
     method: "DELETE",
   });
+  return data;
+};
