@@ -7,8 +7,8 @@ import connectDB from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
 import urlRoutes from "./routes/urlRoutes.js";
 import cors from "cors";
-import URL from "./models/url.js";
-import Visit from "./models/visit.js";
+import URL from "./modal/urlModal.js";
+import Visit from "./modal/visitModal.js";
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -66,13 +66,17 @@ app.get("/favicon.ico", (req, res) => {
 // Handle URL redirects
 app.get("/:shortUrl", async (req, res) => {
   try {
+    console.log("Looking for URL with shortUrl:", `https://${process.env.HOSTNAME}/${req.params.shortUrl}`);
     const url = await URL.findOne({ 
       shortUrl: `https://${process.env.HOSTNAME}/${req.params.shortUrl}` 
     });
 
     if (!url) {
+      console.log("URL not found");
       return res.status(404).json({ message: "URL not found" });
     }
+
+    console.log("Found URL:", url);
 
     // Create visit record
     await Visit.create({
@@ -85,6 +89,7 @@ app.get("/:shortUrl", async (req, res) => {
     url.clicks += 1;
     await url.save();
 
+    console.log("Redirecting to:", url.originalUrl);
     // Redirect to original URL
     res.redirect(url.originalUrl);
   } catch (error) {
