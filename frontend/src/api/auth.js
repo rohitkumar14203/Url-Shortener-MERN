@@ -56,8 +56,7 @@ const apiRequest = async (endpoint, options) => {
   }
 };
 
-// Simplified API functions that use the base apiRequest
-const loginUser = async (credentials) => {
+export const loginUser = async (credentials) => {
   try {
     const response = await apiRequest("/login", {
       method: "POST",
@@ -66,7 +65,7 @@ const loginUser = async (credentials) => {
 
     if (response.token) {
       localStorage.setItem("token", response.token);
-      console.log("Token stored:", response.token); // Debug log
+      console.log("Token stored:", response.token);
     }
 
     return response;
@@ -76,34 +75,42 @@ const loginUser = async (credentials) => {
   }
 };
 
-export const registerUser = (userData) =>
-  apiRequest("/register", {
+export const registerUser = async (userData) => {
+  const data = await apiRequest("/register", {
     method: "POST",
     body: JSON.stringify(userData),
   });
+  return data;
+};
 
 export const logoutUser = async () => {
   try {
     await apiRequest("/logout", { method: "POST" });
-    localStorage.removeItem("token"); // Clear token on logout
+    localStorage.removeItem("token");
   } catch (error) {
     console.error("Logout error:", error);
     throw error;
   }
 };
 
-export const getUser = () =>
-  apiRequest("/profile", {
+export const getUser = async () => {
+  const data = await apiRequest("/profile", {
     method: "GET",
   });
+  return data;
+};
 
-export const updateUser = (userData) =>
-  apiRequest("/profile", {
+export const updateUser = async (userData) => {
+  const data = await apiRequest("/profile", {
     method: "PUT",
     body: JSON.stringify(userData),
   });
+  return data;
+};
 
-export const deleteUser = () =>
-  apiRequest("/profile", {
+export const deleteUser = async () => {
+  const data = await apiRequest("/profile", {
     method: "DELETE",
   });
+  return data;
+};
