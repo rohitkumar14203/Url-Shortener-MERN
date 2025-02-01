@@ -2,20 +2,6 @@ import asyncHandler from "../middleware/asyncHandler.js";
 import URL from "../modal/urlModal.js";
 import Visit from "../modal/visitModal.js";
 
-// Debug middleware for URL routes
-const debugRequest = (req, res, next) => {
-  console.log("URL Request:", {
-    method: req.method,
-    path: req.path,
-    headers: {
-      authorization: req.headers.authorization,
-      cookie: req.headers.cookie,
-    },
-    user: req.user?._id,
-  });
-  next();
-};
-
 // @desc    Create a short URL
 // @route   POST /api/url/shorten
 // @access  Private
@@ -27,27 +13,28 @@ const createShortUrl = asyncHandler(async (req, res) => {
     throw new Error("Original URL is required");
   }
 
-  // Generate a unique short URL
-  const shortUrl = Math.random().toString(36).substring(2, 8);
+  // Generate a unique short URL code
+  const shortUrlCode = Math.random().toString(36).substring(2, 8);
+
+  // Create the full short URL
+  const fullShortUrl = `${
+    process.env.HOSTNAME || "https://url-shortener-mern.onrender.com"
+  }/${shortUrlCode}`;
 
   const url = await URL.create({
     user: req.user._id,
     originalUrl,
-    shortUrl,
+    shortUrl: shortUrlCode, // Store just the code
+    fullShortUrl, // Store the full URL
     expirationDate: expirationDate || null,
     remarks: remarks || "",
   });
-
-  // Return the full short URL
-  const fullShortUrl = `${
-    process.env.API_BASE_URL || "http://localhost:5000"
-  }/${url.shortUrl}`;
 
   res.status(201).json({
     success: true,
     data: {
       ...url.toObject(),
-      fullShortUrl,
+      shortUrl: fullShortUrl, // Return the full URL
     },
   });
 });

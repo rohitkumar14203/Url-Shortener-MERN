@@ -66,10 +66,11 @@ app.get("/favicon.ico", (req, res) => {
 // Handle URL redirects
 app.get("/:shortUrl", async (req, res) => {
   try {
-    // Make internal request to visit endpoint
+    // Look for URL by the short code
     const url = await URL.findOne({ shortUrl: req.params.shortUrl });
 
     if (!url) {
+      console.log("URL not found:", req.params.shortUrl);
       return res.status(404).json({ message: "URL not found or invalid" });
     }
 
@@ -85,20 +86,8 @@ app.get("/:shortUrl", async (req, res) => {
     url.clicks += 1;
     await url.save();
 
-    // Ensure the URL starts with http:// or https://
-    let redirectUrl = url.originalUrl;
-    if (
-      !redirectUrl.startsWith("http://") &&
-      !redirectUrl.startsWith("https://")
-    ) {
-      redirectUrl = "https://" + redirectUrl;
-    }
-
-    // Log the redirect
-    console.log("Redirecting to:", redirectUrl);
-
-    // Redirect to the original URL
-    res.redirect(redirectUrl);
+    console.log("Redirecting to:", url.originalUrl);
+    res.redirect(url.originalUrl);
   } catch (error) {
     console.error("Redirect error:", error);
     res.status(404).json({ message: "URL not found or invalid" });
