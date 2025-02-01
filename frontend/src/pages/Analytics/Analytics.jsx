@@ -1,16 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { getAllUrls } from "../../api/url";
 import styles from "./Analytics.module.css";
 import dtIcon from "../../assets/dt.png";
 import arrowIcon from "../../assets/arrow.svg";
 import arrow1Icon from "../../assets/arrow1.svg";
-import { API_BASE_URL } from "../../config/config";
 
 const ITEMS_PER_PAGE = 9;
 
 const Analytics = () => {
   const [visits, setVisits] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const navigate = useNavigate();
 
   // Reset page when data changes
   useEffect(() => {
@@ -19,19 +21,27 @@ const Analytics = () => {
 
   const fetchVisits = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/url/all`, {
-        credentials: "include",
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Failed to fetch analytics data");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.log("No token found - redirecting to login");
+        navigate("/login");
+        return;
       }
-      const data = await response.json();
-      setVisits(data.data.visits); // Data is already sorted by timestamp
+
+      const response = await getAllUrls();
+      setVisits(response.data.visits); // Data is already sorted by timestamp
     } catch (error) {
-      toast.error(error.message);
+      console.error("Error fetching analytics:", error);
+      if (
+        error.message.includes("No authentication token found") ||
+        error.message.includes("unauthorized")
+      ) {
+        navigate("/login");
+      } else {
+        toast.error(error.message || "Failed to fetch analytics data");
+      }
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     fetchVisits();

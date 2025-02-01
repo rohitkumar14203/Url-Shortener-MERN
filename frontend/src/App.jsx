@@ -18,6 +18,7 @@ import Layout from "./layout/Layout";
 import Setting from "./pages/setting/Setting";
 import Links from "./pages/Links/Links";
 import Analytics from "./pages/Analytics/Analytics";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -30,10 +31,10 @@ const router = createBrowserRouter(
 
       <Route element={<ProtectedRoutes />}>
         <Route element={<Layout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/link" element={<Links />} />
-          <Route path="/setting" element={<Setting />} />
-          <Route path="/analytic" element={<Analytics />} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/link" element={<ProtectedRoute><Links /></ProtectedRoute>} />
+          <Route path="/setting" element={<ProtectedRoute><Setting /></ProtectedRoute>} />
+          <Route path="/analytic" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
         </Route>
       </Route>
     </Route>

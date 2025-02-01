@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import { notify } from "../../utils/notify";
-import { useOutletContext, useLocation } from "react-router-dom";
+import { useOutletContext, useLocation, useNavigate } from "react-router-dom";
 import styles from "./Links.module.css";
 import Modal from "../../components/Modal/Modal";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
@@ -11,7 +11,7 @@ import deleteIcon from "../../assets/delete.png";
 import copyIcon from "../../assets/copy.png";
 import arrowIcon from "../../assets/arrow.svg";
 import arrow1Icon from "../../assets/arrow1.svg";
-import { API_BASE_URL } from "../../config/config";
+import { getAllUrls, deleteUrl, updateUrl } from "../../api/url";
 
 const ITEMS_PER_PAGE = 9;
 
@@ -24,6 +24,7 @@ const Links = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const { setRefreshCallback } = useOutletContext();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Reset page when data changes
   useEffect(() => {
@@ -32,16 +33,17 @@ const Links = () => {
 
   const fetchLinks = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/url/all`, {
-        credentials: "include",
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Failed to fetch links");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.log("No token found - redirecting to login");
+        navigate("/login");
+        return;
       }
-      const data = await response.json();
+
+      const response = await getAllUrls();
+      
       // Sort links by creation date (newest first)
-      const sortedLinks = data.data.urls.sort(
+      const sortedLinks = response.data.urls.sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       );
       setLinks(sortedLinks);
@@ -58,9 +60,15 @@ const Links = () => {
         setFilteredLinks(sortedLinks);
       }
     } catch (error) {
-      notify(error.message, "error");
+      console.error("Error fetching links:", error);
+      if (error.message.includes("No authentication token found") || 
+          error.message.includes("unauthorized")) {
+        navigate("/login");
+      } else {
+        toast.error(error.message || "Failed to fetch links");
+      }
     }
-  }, [location.state?.searchQuery]);
+  }, [location.state?.searchQuery, navigate]);
 
   useEffect(() => {
     fetchLinks();
@@ -97,23 +105,11 @@ const Links = () => {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/url/${selectedLink._id}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Failed to delete link");
-      }
-
-      notify("Link deleted successfully");
+      await deleteUrl(selectedLink._id);
+      toast.success("Link deleted successfully");
       fetchLinks();
     } catch (error) {
-      notify(error.message, "error");
+      toast.error(error.message || "Failed to delete link");
     } finally {
       setIsDeleteModalOpen(false);
       setSelectedLink(null);
@@ -127,28 +123,12 @@ const Links = () => {
 
   const handleUpdate = async (formData) => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/url/${selectedLink._id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify(formData),
-        }
-      );
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to update link");
-      }
-
+      await updateUrl(selectedLink._id, formData);
       toast.success("Link updated successfully");
       setIsEditModalOpen(false);
       fetchLinks();
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Failed to update link");
     }
   };
 
