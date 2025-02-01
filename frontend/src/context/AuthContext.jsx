@@ -6,23 +6,22 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem("token"));
   const [loading, setLoading] = useState(true);
 
   // Check authentication status on mount and token change
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem("token");
-      const savedUser = localStorage.getItem("user");
-
-      if (token && savedUser) {
+      const storedToken = localStorage.getItem("token");
+      if (storedToken) {
         try {
-          // Verify token is still valid
           const userData = await getUser();
           setUser(userData);
+          setToken(storedToken);
         } catch (error) {
-          // If token is invalid, clear storage
           localStorage.removeItem("token");
           localStorage.removeItem("user");
+          setToken(null);
           setUser(null);
         }
       }
@@ -36,6 +35,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await loginUser(credentials);
       setUser(data);
+      setToken(data.token);
       localStorage.setItem("user", JSON.stringify(data));
       localStorage.setItem("token", data.token);
       toast.success("Login successful");
@@ -65,9 +65,9 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      // Always clear local storage and state
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      setToken(null);
       setUser(null);
     }
   };
@@ -80,6 +80,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         user,
+        token,
         login,
         logout,
         register,

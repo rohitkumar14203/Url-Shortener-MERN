@@ -2,42 +2,33 @@ import { useState, useEffect, useCallback } from "react";
 import { notify } from "../../utils/notify";
 import styles from "./Dashboard.module.css";
 import { API_BASE_URL } from "../../config/config";
+import { getAllUrls } from "../../api/url";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const [links, setLinks] = useState([]);
   const [clicksByDate, setClicksByDate] = useState({});
   const [deviceStats, setDeviceStats] = useState({});
   const [totalClicks, setTotalClicks] = useState(0);
+  const navigate = useNavigate();
 
   const fetchLinks = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/url/all`, {
-        credentials: "include",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Failed to fetch links");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login");
+        return;
       }
-      const data = await response.json();
-
-      // Get URLs and visits from the response
-      const { urls, visits } = data.data;
-
-      // Sort URLs by creation date (newest first)
-      const sortedUrls = urls.sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-      );
-
-      setLinks(sortedUrls);
-      processClickData(sortedUrls, visits);
+      const data = await getAllUrls();
+      setLinks(data.data.urls);
+      processClickData(data.data.urls, data.data.visits);
     } catch (error) {
-      notify(error.message, "error");
+      console.error("Error fetching URLs:", error);
+      if (error.message.includes("Please login")) {
+        navigate("/login");
+      }
     }
-  }, []);
+  }, [navigate]);
 
   const processClickData = (urlsData, visitsData) => {
     let clicksPerDate = {};

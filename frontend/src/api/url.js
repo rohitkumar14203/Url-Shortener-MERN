@@ -6,21 +6,19 @@ console.log("API URL:", BASE_URL); // For debugging
 
 const apiRequest = async (endpoint, options) => {
   try {
-    const defaultOptions = {
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-
     const token = localStorage.getItem("token");
     if (!token) {
-      // Redirect to login if no token
       window.location.href = "/login";
       throw new Error("Please login to continue");
     }
 
-    defaultOptions.headers.Authorization = `Bearer ${token}`;
+    const defaultOptions = {
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Always include token in headers
+      },
+    };
 
     const mergedOptions = {
       ...defaultOptions,
@@ -31,10 +29,11 @@ const apiRequest = async (endpoint, options) => {
       },
     };
 
+    console.log("Making URL request with options:", mergedOptions); // Debug log
+
     const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
 
     if (response.status === 401) {
-      // Clear invalid token
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       window.location.href = "/login";

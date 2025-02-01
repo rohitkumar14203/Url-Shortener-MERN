@@ -57,11 +57,24 @@ const apiRequest = async (endpoint, options) => {
 };
 
 // Simplified API functions that use the base apiRequest
-export const loginUser = (credentials) =>
-  apiRequest("/login", {
-    method: "POST",
-    body: JSON.stringify(credentials),
-  });
+const loginUser = async (credentials) => {
+  try {
+    const response = await apiRequest("/login", {
+      method: "POST",
+      body: JSON.stringify(credentials),
+    });
+
+    if (response.token) {
+      localStorage.setItem("token", response.token);
+      console.log("Token stored:", response.token); // Debug log
+    }
+
+    return response;
+  } catch (error) {
+    console.error("Login error:", error);
+    throw error;
+  }
+};
 
 export const registerUser = (userData) =>
   apiRequest("/register", {
