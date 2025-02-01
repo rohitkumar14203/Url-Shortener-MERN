@@ -183,24 +183,38 @@ const getUrlStats = asyncHandler(async (req, res) => {
 
 // Helper function to get client IP
 const getClientIP = (req) => {
-  // Try to get IP from various headers
-  const forwardedFor = req.headers["x-forwarded-for"];
-  const realIP = req.headers["x-real-ip"];
-  const cfConnectingIP = req.headers["cf-connecting-ip"];
-  const trueClientIP = req.headers["true-client-ip"];
-
-  if (forwardedFor) {
-    // x-forwarded-for can contain multiple IPs, get the first one
-    const ips = forwardedFor.split(",");
-    return ips[0].trim();
+  // For Cloudflare
+  if (req.headers["cf-connecting-ip"]) {
+    return req.headers["cf-connecting-ip"];
   }
 
-  if (trueClientIP) return trueClientIP;
-  if (cfConnectingIP) return cfConnectingIP;
-  if (realIP) return realIP;
+  // For x-forwarded-for
+  if (req.headers["x-forwarded-for"]) {
+    // Get the first IP in the list (client's original IP)
+    const ips = req.headers["x-forwarded-for"].split(",");
+    // Clean and validate the IP
+    const clientIP = ips[0].trim();
+    if (clientIP && clientIP !== "1") {
+      return clientIP;
+    }
+  }
 
-  // Fallback to remote address
-  return req.connection.remoteAddress?.replace(/^.*:/, "") || "Unknown";
+  // Try true-client-ip header
+  if (req.headers["true-client-ip"]) {
+    return req.headers["true-client-ip"];
+  }
+
+  // Try x-real-ip header
+  if (req.headers["x-real-ip"]) {
+    return req.headers["x-real-ip"];
+  }
+
+  // Last resort: remote address
+  if (req.socket && req.socket.remoteAddress) {
+    return req.socket.remoteAddress.replace(/^.*:/, "");
+  }
+
+  return "Unknown";
 };
 
 // @desc    Record a visit to a URL
@@ -216,7 +230,16 @@ const recordVisit = asyncHandler(async (req, res) => {
 
   // Get the actual client IP
   const clientIP = getClientIP(req);
-  console.log("Client IP:", clientIP);
+
+  // Debug logging
+  console.log("IP Detection Debug:", {
+    cfConnecting: req.headers["cf-connecting-ip"],
+    xForwardedFor: req.headers["x-forwarded-for"],
+    trueClientIp: req.headers["true-client-ip"],
+    xRealIp: req.headers["x-real-ip"],
+    remoteAddr: req.socket?.remoteAddress,
+    finalIP: clientIP,
+  });
 
   // Create visit record with actual IP
   await Visit.create({
