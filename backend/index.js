@@ -94,6 +94,9 @@ app.get("/:shortUrl", async (req, res) => {
       redirectUrl = "https://" + redirectUrl;
     }
 
+    // Log the redirect
+    console.log("Redirecting to:", redirectUrl);
+
     // Redirect to the original URL
     res.redirect(redirectUrl);
   } catch (error) {

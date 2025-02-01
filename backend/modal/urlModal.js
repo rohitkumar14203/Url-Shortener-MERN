@@ -34,44 +34,48 @@ const clickDetailSchema = new mongoose.Schema({
 clickDetailSchema.index({ visitId: 1 });
 
 // Main URL Schema
-const urlSchema = new mongoose.Schema(
-  {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    originalUrl: {
-      type: String,
-      required: true,
-    },
-    shortUrl: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    clicks: {
-      type: Number,
-      default: 0,
-    },
-    status: {
-      type: String,
-      enum: ["active", "inactive"],
-      default: "active",
-    },
-    expirationDate: {
-      type: Date,
-      default: null,
-    },
-    remarks: {
-      type: String,
-      default: "",
+const urlSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  originalUrl: {
+    type: String,
+    required: true,
+    validate: {
+      validator: function (v) {
+        return /^(ftp|http|https):\/\/[^ "]+$/.test(v); // Validate URL format
+      },
+      message: (props) => `${props.value} is not a valid URL!`,
     },
   },
-  {
-    timestamps: true,
-  }
-);
+  shortUrl: {
+    type: String,
+    unique: true,
+  },
+  expirationDate: {
+    type: Date,
+    default: null,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  clicks: {
+    type: Number,
+    default: 0,
+  },
+  status: {
+    type: String,
+    enum: ["active", "inactive"],
+    default: "active",
+  },
+  clickDetails: [clickDetailSchema],
+  remarks: {
+    type: String,
+  },
+});
 
 // Create indexes for efficient querying
 urlSchema.index({ status: 1 });
