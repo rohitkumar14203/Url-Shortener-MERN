@@ -21,19 +21,23 @@ const apiRequest = async (endpoint, options) => {
       },
     };
 
-    console.log("Making request to:", `${BASE_URL}${endpoint}`);
-    const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
+    console.log("Request URL:", `${BASE_URL}${endpoint}`);
+    console.log("Request Options:", mergedOptions);
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("API Error Response:", errorData);
-      throw new Error(errorData.message || "Server error occurred");
-    }
+    const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
+    console.log("Response Status:", response.status);
+    console.log("Response Headers:", [...response.headers.entries()]);
 
     const data = await response.json();
+    console.log("Response Data:", data);
+
+    if (!response.ok) {
+      throw new Error(data.message || "Server error occurred");
+    }
+
     return data;
   } catch (error) {
-    console.error("API Request Error:", error);
+    console.error("API Error:", error);
     throw error;
   }
 };

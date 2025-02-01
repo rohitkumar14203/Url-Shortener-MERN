@@ -17,4 +17,13 @@ router.put("/:id", authenticate, updateUrl);
 router.delete("/:id", authenticate, deleteUrl);
 router.get("/:shortUrl/stats", authenticate, getUrlStats);
 
+// Add this route for testing
+router.get("/test-auth", authenticate, (req, res) => {
+  res.json({
+    message: "Authentication successful",
+    user: req.user._id,
+    cookies: req.cookies,
+  });
+});
+
 export default router;

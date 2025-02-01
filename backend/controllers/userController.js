@@ -70,11 +70,10 @@ const loginUser = asyncHandler(async (req, res) => {
       // Update cookie configuration
       res.cookie("jwt", token, {
         httpOnly: true,
-        secure: true, // Always use secure in production
+        secure: true,
         sameSite: "none",
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        maxAge: 30 * 24 * 60 * 60 * 1000,
         path: "/",
-        // Remove domain setting to allow the browser to handle it
       });
 
       return res.json({
@@ -146,7 +145,6 @@ const logoutUser = asyncHandler(async (req, res) => {
       sameSite: "none",
       maxAge: 0,
       path: "/",
-      // Remove domain setting
     });
 
     res.status(200).json({ message: "Logged out successfully" });
