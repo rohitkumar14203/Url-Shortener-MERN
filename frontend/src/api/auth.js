@@ -19,12 +19,17 @@ const apiRequest = async (endpoint, options = {}) => {
         ...defaultOptions.headers,
         ...(options.headers || {}),
       },
-      credentials: "include",
     };
 
-    console.log("Making request with options:", mergedOptions);
+    console.log("Request URL:", `${BASE_URL}${endpoint}`);
+    console.log("Request Options:", mergedOptions);
 
     const response = await fetch(`${BASE_URL}${endpoint}`, mergedOptions);
+
+    // Log response headers for debugging
+    console.log("Response Headers:", [...response.headers.entries()]);
+    console.log("Response Status:", response.status);
+
     const data = await response.json();
 
     if (!response.ok) {

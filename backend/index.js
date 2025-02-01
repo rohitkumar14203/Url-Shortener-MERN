@@ -35,13 +35,10 @@ app.use(
   })
 );
 
-// Remove the duplicate CORS headers since we're using the cors middleware
+// Additional headers
 app.use((req, res, next) => {
-  // Only set cookie settings
-  res.set({
-    "Access-Control-Allow-Credentials": true,
-    "Access-Control-Allow-Origin": FRONTEND_URL,
-  });
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Origin", FRONTEND_URL);
   next();
 });
 
