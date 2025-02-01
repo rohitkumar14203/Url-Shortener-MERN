@@ -3,20 +3,28 @@ import User from "../modal/userModal.js";
 import asyncHandler from "./asyncHandler.js";
 
 const authenticate = asyncHandler(async (req, res, next) => {
-  let token = req.cookies.jwt;
+  try {
+    const token = req.cookies.jwt;
 
-  if (token) {
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.userId).select("-password");
-      next();
-    } catch (error) {
+    if (!token) {
       res.status(401);
-      throw new Error("Not authorized, token failed");
+      throw new Error("Not authorized, no token");
     }
-  } else {
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId).select("-password");
+
+    if (!user) {
+      res.status(401);
+      throw new Error("User not found");
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    console.error("Auth error:", error);
     res.status(401);
-    throw new Error("Not authorized, no token");
+    throw new Error(error.message || "Not authorized");
   }
 });
 
